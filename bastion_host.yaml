@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This Template is Creating Bastion Host/Instance  with BastionvSecurity Group 
+
+Parameters: #### Define Parameters #####
+
+  SSHKeyName:
+    Description: 'Name of the EC2-key you need to use for Bastion Instance'
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    Default: ""
+  SSHLocation:
+    Description: The IP address range that can be used to SSH to the EC2 instances
+    Type: String
+    MinLength: 9
+    MaxLength: 18
+    Default: 0.0.0.0/0
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+  InstanceType: 
+    Description: Choose a valid Instance Type
+    Type: String
+    Default: t2.micro
+    AllowedValues: [t2.micro, t2.small, t2.medium, t2.large, m3.medium, m3.large,
+      m3.xlarge, m3.2xlarge, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge]
+  MyVPC:
+    Description:  Enter the VPC ID where you want to create Bastion Instance
+    Type: String
+    Default: ""
+  PublicSubnetAZ1: 
+    Description:   Enter the Subnet ID for Bastion Instance
+    Type: String
+    Default: ""
+
+Mappings: #### Define Mappings #####
+  AWSInstanceType2Arch:    
+    t2.micro:
+      Arch : HVM64  
+    t2.small: 
+      Arch : HVM64  
+    t2.medium:  
+      Arch : HVM64   
+ 
+  AWSRegionArch2AMI:
+    us-east-1: 
+      HVM64: ami-04d29b6f966df1537 
+    us-east-2: 
+      HVM64: ami-09558250a3419e7d0
+    us-west-1: 
+      HVM64: ami-08d9a394ac1c2994c
+    us-west-2: 
+      HVM64: ami-0e472933a1395e172
+   
+Resources: #### Define Resources #####
+
+  BastionSecurityGroup: # Bastion Security Group for Bastion Host/Instance
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow SSH to  Web Server Security Group"
+      VpcId: !Ref PubPrivateVPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: !Ref SSHLocation
+
+  EC2BastionInstance:  # Bastion EC2 Host/Instance 
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !FindInMap [ AWSRegionArch2AMI, !Ref 'AWS::Region' , !FindInMap [ AWSInstanceType2Arch, !Ref InstanceType, Arch ] ]  
+      KeyName: !Ref SSHKeyName
+      InstanceType: !Ref InstanceType
+      SubnetId: !Ref PublicSubnet1
+      SecurityGroupIds: 
+      - !Ref BastionSecurityGroup
+      Tags:
+      - Key: Name
+        Value: BastionHost            
+
+Outputs: #### Define Outputs #####
+
+  BastionSecurityGroup: 
+    Description: "Bastion Instance's Security Group"
+    Value:
+      !Ref BastionSecurityGroup        
+  EC2BastionInstance:
+      Description: "EC2 Bastion Instance"
+      Value:
+        !Ref EC2BastionInstance    

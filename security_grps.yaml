@@ -1,0 +1,109 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This Template is creats Multiple Security Groups 
+
+Parameters:  #### Define Parameters #####
+  SSHLocation:
+    Description: The IP address range that can be used to SSH to the EC2 instances
+    Type: String
+    MinLength: 9
+    MaxLength: 18
+    Default: 0.0.0.0/0
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+  PubPrivateVPC:
+    Description:  Enter the VPC ID where you want to create Security Groups
+    Type: String
+    Default: ""
+
+Resources:  #### Define Resources #####
+
+  BastionSecurityGroup: # Security Group for Bastion host
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow SSH to  Web Server Security Group"
+      VpcId: !Ref PubPrivateVPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: !Ref SSHLocation
+
+  ELBSecurityGroup: # ELB Security Group 
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow HTTP and HTTPS to everywhere"
+      VpcId: !Ref PubPrivateVPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: 443
+        ToPort: 443
+        CidrIp: 0.0.0.0/0
+
+  WebServerSecurityGroup: # Webserver Security Group
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow http to ALB sec group, 3306 to RDS database sec group, ssh to bastion sec group"
+      VpcId: !Ref PubPrivateVPC
+  MySecGroupIngressSSH:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      GroupId: !Ref WebServerSecurityGroup
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      SourceSecurityGroupId: !Ref BastionSecurityGroup
+  MySecGroupIngressHTTP:  
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      GroupId: !Ref WebServerSecurityGroup
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      SourceSecurityGroupId: !Ref ELBSecurityGroup
+  MySecGroupIngressRDS: 
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      GroupId: !Ref WebServerSecurityGroup  
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306
+      SourceSecurityGroupId: !Ref RDSSecurityGroup
+
+  RDSSecurityGroup: # RDS Security Group for RDS Database Instance
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow port 3306 to Web Servers Security Group"
+      VpcId: !Ref PubPrivateVPC
+  MySecurityGrpIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref RDSSecurityGroup
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306
+      SourceSecurityGroupId: !Ref WebServerSecurityGroup
+      Tags:
+      - Key: Name
+        Value: RDSDBInstance         
+
+Outputs:
+  BastionSecurityGroup: 
+    Description: "Bastion Instance's Security Group"
+    Value:
+      !Ref BastionSecurityGroup
+  ELBSecurityGroup:
+    Description: "ELB Security Group"
+    Value:
+      !Ref ELBSecurityGroup
+  WebServerSecurityGroup:
+    Description: "WordPress Web Server's Security Group"
+    Value:
+      !Ref WebServerSecurityGroup
+  RDSSecurityGroup:
+    Description: "RDS Security Group"
+    Value:
+      !Ref RDSSecurityGroup        

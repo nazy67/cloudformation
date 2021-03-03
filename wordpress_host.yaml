@@ -1,0 +1,152 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Template is reusable will create WordPress Instance with WordPress Security Grp
+
+Parameters: 
+  
+  WebInstanceType: # Instance Type. 
+    Type: String   
+    Default: t2.micro
+    AllowedValues: [t2.micro, t2.small, t2.medium]
+    Description: Please choose a valid instance type. 
+
+  SSHKeyName: # Key Name 
+    Type: String
+    Default: ""
+    Description: Must be the Name of an existing EC2 KeyPair.  
+
+  VolumeSize: # Volume Size 
+    Type: Number
+    Default: 20
+    Description: Please choose a valid Number
+    AllowedValues: [20, 30, 40, 50]  
+
+  PrivateSubnet1: # Private Subnet 1 Id 
+    Description:  Enter the Private Subnet1 Id where you want to create WordPress Instance  
+    Type: String
+    Default: ""
+  PrivateSubnet2: # Private Subnet 2 Id 
+    Description:  Enter the  Private Subnet2 Id where you want to create WordPress Instance  
+    Type: String
+    Default: ""
+
+  TeamTagKey: # Tags 
+    Type: String
+    Default: Team
+  TeamTagValue:
+    Type: String
+    Default: Infra
+  EnvTagKey:
+    Type: String
+    Default: Env 
+  EnvTagValue:
+    Type: String
+    Default: Dev
+
+Mappings: # Mapping for Web Server Instance
+  AWSInstanceType2Arch:    
+    t2.micro:
+      Arch : HVM64  
+    t2.small: 
+      Arch : HVM64  
+    t2.medium:  
+      Arch : HVM64  
+  
+  AWSRegionArch2AMI:
+    us-east-1: 
+      HVM64: ami-04d29b6f966df1537 
+    us-east-2: 
+      HVM64: ami-09558250a3419e7d0
+    us-west-1: 
+      HVM64: ami-08d9a394ac1c2994c
+    us-west-2: 
+      HVM64: ami-0e472933a1395e172
+
+Resources: 
+
+  WebServerSecurityGroup: # Web Server Sec Group for WordPress host build to avoid circular dependencies
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow http to ALB sec group, 3306 to RDS database sec group, ssh to bastion sec group"
+      VpcId: !Ref PubPrivateVPC
+  MySecGroupIngressSSH:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      GroupId: !Ref WebServerSecurityGroup
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      SourceSecurityGroupId: !Ref BastionSecurityGroup
+  MySecGroupIngressHTTP:  
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      GroupId: !Ref WebServerSecurityGroup
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      SourceSecurityGroupId: !Ref ELBSecurityGroup
+  MySecGroupIngressRDS: 
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties: 
+      GroupId: !Ref WebServerSecurityGroup  
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306
+      SourceSecurityGroupId: !Ref RDSSecurityGroup
+
+  WordpressWebInstance: # WordPress Web Instance 
+    Description:  Web Server needs to be created with bastion-key that's why its separate from the VPC stack
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId:  
+        Fn::FindInMap:
+        - AWSRegionArch2AMI
+        - Ref: AWS::Region
+        - Fn::FindInMap:
+          - AWSInstanceType2Arch
+          - Ref: WebInstanceType
+          - Arch
+      KeyName: !Ref SSHKeyName
+      InstanceType: !Ref WebInstanceType
+      SubnetId: !Ref PrivateSubnet1
+      SecurityGroupIds:
+      - !Ref WebServerSecurityGroup
+      UserData:
+        Fn::Base64: 
+          !Sub |
+              #!/bin/bash -e
+              sudo hostnamectl set-hostname wordpress-web
+              sudo amazon-linux-extras install -y php7.2
+              sudo yum install -y httpd 
+              sudo systemctl start httpd
+              sudo systemctl enable httpd
+              wget https://wordpress.org/latest.tar.gz
+              tar -xzf latest.tar.gz
+              sudo yum install php-gd -y
+              sudo yum install mysql -y 
+              sudo systemctl restart httpd
+              sudo cp -r wordpress/* /var/www/html
+              sudo chown -R apache:apache /var/www/html
+              sudo systemctl restart httpd
+      BlockDeviceMappings:
+        -
+          DeviceName: /dev/xvda
+          Ebs:
+            VolumeType: gp2
+            VolumeSize: !Ref VolumeSize
+      Tags: 
+        - Key: Name
+          Value: WordPressInstance
+        - Key: !Ref TeamTagKey
+          Value: !Ref TeamTagValue
+        - Key: !Ref EnvTagKey
+          Value: !Ref  EnvTagValue   
+
+Outputs:
+
+  WebServerSecurityGroup:
+    Description: "WordPress Web Server's Security Group"
+    Value:
+      !Ref WebServerSecurityGroup
+  WordpressWebInstance:
+    Description: "WordPress Web Server Id"
+    Value: !Ref WordpressWebInstance           

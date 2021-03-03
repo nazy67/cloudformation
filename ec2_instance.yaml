@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This template provision reusable for EC2
+
+# Define Parameters
+Parameters:
+
+  MyImageId:  # ImageId 
+    Type: String
+    Default:  "" 
+    Description:  Enter AMI ID that you want to use
+
+  MyInstanceType: # Instance Type
+    Type: String   
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro
+      - t3.micro
+
+  SubnetId: # SubnetId
+    Type: String
+    Default: ""
+    Description: Enter your Subnet ID 
+
+  MySecGrpId: # Sec Grp Id if you have alredy one
+    Type: String 
+    Default: sg-05ecf5446b058b5d4
+
+
+  SSHKeyName: # SSH Key Name
+    Type: String
+    Default: ""
+    Description: Enter your SSH-key, make sure you have it in that region
+      
+  TeamTagKey: # Team Key
+    Type: String
+    Default: Team
+  TeamTagValue:
+    Type: String
+    Default: Infra
+  EnvTagKey:
+    Type: String
+    Default: Env 
+  EnvTagValue:
+    Type: String
+    Default: Dev   
+
+# Define Resources
+Resources: 
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref WPImageId 
+      InstanceType: !Ref WPInstanceType 
+      SubnetId: !Ref SubnetId
+      SecurityGroupIds: 
+        - !Ref WPSecGrpId
+      KeyName: !Ref SSHKeyName
+      Tags: 
+        - Key: Name
+          Value: EC2Name
+        - Key: !Ref TeamTagKey
+          Value: !Ref TeamTagValue
+        - Key: !Ref EnvTagKey
+          Value: !Ref  EnvTagValue 
+      
+# Define Outputs
+Outputs: 
+  InstancePublicIp: 
+    Value: !GetAtt WPInstance.PublicIp

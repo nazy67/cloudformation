@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creates ELB with a EC2 Target Group Associated
+### Define Parameters
+Parameters:
+  TGName:
+    Type: String
+    Default: "MyTargetGroup"  
+  MyALBName: 
+    Type: String
+    Default: "MyALB"
+  ELBSecurityGroup: 
+    Type: String
+    Default: ""  
+  WordpressWebInstance: 
+    Type: String
+    Default: ""   
+  PubPrivateVPC:
+    Type: String
+    Default: ""  
+  PublicSubnet1:
+    Type: String
+    Default: ""
+  PublicSubnet2:
+    Type: String
+    Default: ""  
+  AppLoadbalancerSslCertArn:
+    Description: SSL certificate for Application load balancer
+    Type: String
+    Default:  arn:aws:acm:us-east-1:974912841781:certificate/b3b5c0db-97a0-4ebc-8b8e-fb615aaf3e47 
+    
+
+### Define Resouces 
+Resources:
+ 
+  EC2TargetGroup: # Target Group
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: 
+      - MyALB
+    Properties:
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: "/"
+      Port: 80
+      HealthCheckPort: "traffic-port"
+      Protocol: HTTP
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 10
+      HealthyThresholdCount: 5
+      UnhealthyThresholdCount: 2
+      HealthCheckEnabled: true
+      TargetType: instance
+      Targets:
+      - Id:
+          Ref: WordpressWebInstance
+      Matcher:
+        HttpCode: '200'
+      Name: !Ref TGName 
+      TargetGroupAttributes:
+      - Key: deregistration_delay.timeout_seconds
+        Value: '20'
+      VpcId: !Ref PubPrivateVPC
+      Tags:
+      - Key: Name
+        Value: EC2TargetGroup
+      - Key: Port
+        Value: 80
+
+  myHTTPSlListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      Certificates:
+      - CertificateArn:
+          Ref: AppLoadbalancerSslCertArn
+      DefaultActions:
+      - Type: forward
+        TargetGroupArn: !Ref EC2TargetGroup
+      LoadBalancerArn: !Ref MyALB
+      Port: '443'
+      Protocol: HTTPS
+
+  myHTTPListener: 
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - MyALB
+      - EC2TargetGroup
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupARN:
+            Ref: EC2TargetGroup
+      LoadBalancerARN:
+          Ref: MyALB
+      Port: 80
+      Protocol: HTTP
+
+  MyALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing # or internal
+      Subnets:
+      - Ref: PublicSubnet1
+      - Ref: PublicSubnet2
+      SecurityGroups:
+      - Ref: ELBSecurityGroup      
+      
+
+Outputs:
+  myELBDNSName:
+    Description: 'Webserver ELB DNS Name A Record'
+    Value:
+      !GetAtt MyALB.DNSName
+  EC2TargetGroup:
+    Description: 'My EC2 Target Group'
+    Value:
+      Ref: TGName
+  MyLoadBalancerArn:
+    Description: 'Application Load Balancer'
+    Value:
+      Ref: MyALB       

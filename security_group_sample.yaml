@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This template provision reusable for Security Group
+
+# Define Parameters
+
+Parameters:
+# VPC Id 
+  DefaultVPCId:
+    Type: String
+    Default: ""
+    Description: Enter the VPC ID that you are creating you Sec Grp on
+    
+# WP Sec Grp Name  
+  WPSecGrpName: 
+    Type: String
+    Default: WordPress Sec Group
+
+# Sec grp ingress
+  MyNetworkIP: 
+    Type: String
+    Default: ""
+    Description: Enter your IP , cidr range
+    
+# Team Key
+  TeamTagKey:
+    Type: String
+    Default: Team
+  TeamTagValue:
+    Type: String
+    Default: Infra
+  EnvTagKey:
+    Type: String
+    Default: Env 
+  EnvTagValue:
+    Type: String
+    Default: Dev   
+
+# Define Resources
+
+Resources: 
+  # WordPress Security Group
+  WPSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: This security group for WordPress
+      GroupName: !Ref WPSecGrpName
+      VpcId: !Ref DefaultVPCId
+      SecurityGroupIngress: 
+        - CidrIp: !Ref MyNetworkIP
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22 
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80   
+      Tags: 
+        - Key: Name
+          Value: WPSecGrpName
+        - Key: !Ref TeamTagKey
+          Value: !Ref TeamTagValue
+        - Key: !Ref EnvTagKey
+          Value: !Ref  EnvTagValue 
+
+# Define Outputs
+
+Outputs: 
+  WPSecGrpName: 
+    Description: This is the name of Wordpress Sec Group
+    Value: !Ref WPSecurityGroup

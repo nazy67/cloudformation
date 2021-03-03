@@ -1,0 +1,66 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Reusable Template for AWS RDS
+
+# Define Parameters
+Parameters:
+  MasterName:
+    Type: String
+    Default: ""
+    Description: Enter Master Name
+  MasterPassword:
+    Type: String
+    Default: ""
+    Description: Enter Master Password
+  Subnet1:
+    Type: String
+    Default: ""
+    Description: This Subnet ID is for creating in US East (N. Virginia)us-east-1
+  Subnet2:
+    Type: String
+    Default: "" 
+    Description: This Subnet ID is for creating in US East (N. Virginia)us-east-1
+  DataBaseName:
+    Type: String
+    Default: "" 
+    Description:  Enter the name of your DataBase
+
+# Define Resources
+
+Resources:
+  RDSSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties: 
+      DBSubnetGroupDescription: This subnet group is for RDS DB
+      DBSubnetGroupName: WordPressSubGrp
+      SubnetIds: 
+        - !Ref Subnet1
+        - !Ref Subnet2
+
+  # RDS database           
+  MyRdsDb:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: MariaDB
+      EngineVersion: 10.4.8
+      DBInstanceClass: db.t2.micro
+      DBName: !Ref DataBaseName 
+      MasterUsername: !Ref MasterName
+      MasterUserPassword: !Ref MasterPassword
+      StorageType: gp2
+      AllocatedStorage: 20
+      MaxAllocatedStorage: 50
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      PubliclyAccessible: false
+      BackupRetentionPeriod: 0   
+      DBInstanceIdentifier: rdsdemodbone
+      Port: 3306
+
+# Define Outputs
+
+Outputs:
+  DataBName:
+    Description: RDS Database Name
+    Value: !Ref MyRdsDb
+  DBSubnet:
+    Description: Database Subnet Group
+    Value: !Ref RDSSubnetGroup

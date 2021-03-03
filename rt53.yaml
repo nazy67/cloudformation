@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Route 53 reusable template  with ALB alias
+
+Parameters: 
+
+  MyWebDomain:
+    Description: "A reference to the Webserver Fully Qualified Domain Name domain name example.com"
+    Type: "String" 
+  MyHostedZone:
+    Description: "A reference to the Hosted Zone www.example.com"
+    Type: "String"
+  MyWebALBDNSName:
+    Description: "A reference to the Webserver ELB DNS Name A Record"
+    Type: "String"
+  MyWebALBHostedZoneId:
+    Description: "A reference to the Webserver ELB (Canonical) Hosted Zone ID"
+    Type: String
+    Default: "" 
+    AllowedValues: 
+      - Z35SXDOTRQ7X7K # us-east-1
+      - Z3AADJGX6KTTL2 # us-east-2
+ 
+Resources:
+
+  MyRoute53:
+    Type: "AWS::Route53::RecordSetGroup"
+    Properties:
+      HostedZoneName: !Sub "${WpHostedZone}."
+      Comment: "Zone apex alias targeted to myELB LoadBalancer."
+      RecordSets:
+      - Name: !Sub "${WpWebDomain}."
+        Type: 'A'
+        AliasTarget:
+          HostedZoneId: !Ref "WPWebALBHostedZoneId"
+          DNSName: !Ref "WpWebALBDNSName"      
+
+Outputs:
+
+  MyRoute53:
+    Description: "A reference to the Route53"
+    Value: !Ref "Route53"
