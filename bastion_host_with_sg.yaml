@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: This Template is Creating Bastion Host/Instance  with BastionvSecurity Group 
+Description: This Template is Creating Bastion Host with Bastion Security Group 
 
 Parameters: #### Define Parameters #####
 
@@ -19,8 +19,7 @@ Parameters: #### Define Parameters #####
     Description: Choose a valid Instance Type
     Type: String
     Default: t2.micro
-    AllowedValues: [t2.micro, t2.small, t2.medium, t2.large, m3.medium, m3.large,
-      m3.xlarge, m3.2xlarge, m4.large, m4.xlarge, m4.2xlarge, m4.4xlarge, m4.10xlarge]
+    AllowedValues: [t2.micro, t2.small, t2.medium, t2.large]
   MyVPC:
     Description:  Enter the VPC ID where you want to create Bastion Instance
     Type: String
@@ -29,7 +28,7 @@ Parameters: #### Define Parameters #####
     Description:   Enter the Subnet ID for Bastion Instance
     Type: String
     Default: ""
-
+  
 Mappings: #### Define Mappings #####
   AWSInstanceType2Arch:    
     t2.micro:
@@ -55,7 +54,7 @@ Resources: #### Define Resources #####
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Allow SSH to  Web Server Security Group"
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref MyVPC
       SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: 22
@@ -68,7 +67,7 @@ Resources: #### Define Resources #####
       ImageId: !FindInMap [ AWSRegionArch2AMI, !Ref 'AWS::Region' , !FindInMap [ AWSInstanceType2Arch, !Ref InstanceType, Arch ] ]  
       KeyName: !Ref SSHKeyName
       InstanceType: !Ref InstanceType
-      SubnetId: !Ref PublicSubnet1
+      SubnetId: !Ref PublicSubnetAZ1
       SecurityGroupIds: 
       - !Ref BastionSecurityGroup
       Tags:

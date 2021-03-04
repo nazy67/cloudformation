@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Hard coded template EC2 example on defaul VPC
+
+Resources: 
+  AwsEc2SecurityGroup: 
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: "this is for ec2"
+      GroupName: ec2-sec-group
+      SecurityGroupIngress: 
+      - IpProtocol: tcp
+        FromPort: 22
+        ToPort: 22
+        CidrIp: 0.0.0.0/0
+      VpcId: vpc-de28c3a3 
+      Tags: 
+        - Key: Name
+          Value: EC2SecurityGroup
+
+  MyEC2Instance: # resourse name
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0947d2ba12ee1ff75
+      InstanceType: t2.micro
+      SubnetId:  subnet-91e80aa0
+      SecurityGroupIds: 
+      - !Ref AwsEc2SecurityGroup
+      KeyName: #my_ssh_key
+            Tags: 
+        - Key: Name
+          Value: Ec2Instance

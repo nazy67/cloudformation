@@ -1,12 +1,12 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: This template provision reusable for EC2
+Description: This template is reusable provisions ec2 instance with default sg on default vpc and default public subnet
 
 # Define Parameters
 Parameters:
 
   MyImageId:  # ImageId 
     Type: String
-    Default:  "" 
+    Default:  "" # Amazon Linux 2 AMI
     Description:  Enter AMI ID that you want to use
 
   MyInstanceType: # Instance Type
@@ -18,12 +18,12 @@ Parameters:
 
   SubnetId: # SubnetId
     Type: String
-    Default: ""
+    Default: ""   # it's default public subnet id 
     Description: Enter your Subnet ID 
 
   MySecGrpId: # Sec Grp Id if you have alredy one
     Type: String 
-    Default: sg-05ecf5446b058b5d4
+    Default: ""  # default vpc sg 
 
 
   SSHKeyName: # SSH Key Name
@@ -49,11 +49,11 @@ Resources:
   MyInstance:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: !Ref WPImageId 
-      InstanceType: !Ref WPInstanceType 
+      ImageId: !Ref MyImageId 
+      InstanceType: !Ref MyInstanceType 
       SubnetId: !Ref SubnetId
       SecurityGroupIds: 
-        - !Ref WPSecGrpId
+        - !Ref MySecGrpId
       KeyName: !Ref SSHKeyName
       Tags: 
         - Key: Name
@@ -66,4 +66,4 @@ Resources:
 # Define Outputs
 Outputs: 
   InstancePublicIp: 
-    Value: !GetAtt WPInstance.PublicIp
+    Value: !GetAtt MyInstance.PublicIp

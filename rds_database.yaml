@@ -4,6 +4,7 @@ Description: Reusable Template for AWS RDS
 # Define Parameters
 Parameters:
   MasterName:
+    NoEcho: 
     Type: String
     Default: ""
     Description: Enter Master Name
@@ -27,6 +28,7 @@ Parameters:
 # Define Resources
 
 Resources:
+  # RDS database subnet group
   RDSSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties: 
