@@ -1,35 +1,36 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "A stack is deploying secure dynamic website with EC2 on a private subnet
-              using Elastic load balancer, Route53 and ACM "
+Description: " VPC Template"
+              
 Parameters:
-  EnvironmentName: WordPress-web
-  Description: Reusable template for VPC 
-  Type: String
 
+  EnvironmentName:
+    Description:  "Environment name"
+    Type: String
+    Default: "development"
   VpcCIDR:
     Description: "The is the CIDR block for this VPC"
     Type: String
-    Default: 10.0.0.0/16
+    Default: "10.0.0.0/16"
 
   PublicSubnet1CIDR:
     Description: "This is the IP range (CIDR notation) for the public subnet1 in the first AZ"
     Type:  String
-    Default: 10.0.1.0/24
+    Default: "10.0.1.0/24"
 
   PublicSubnet2CIDR:
     Description: "This is the IP range (CIDR notation) for the public subnet2 in the second AZ"
     Type: String
-    Default: 10.0.2.0/24
+    Default: "10.0.2.0/24"
 
   PrivateSubnet1CIDR:
     Description: "This is the IP range (CIDR notation) for the private subnet1 in the first AZ"
     Type: String
-    Default: 10.0.11.0/24
+    Default: "10.0.11.0/24"
 
   PrivateSubnet2CIDR:
     Description: "This is the IP range (CIDR notation) for the private subnet2 in the second AZ"
     Type: String
-    Default: 10.0.12.0/24
+    Default: "10.0.12.0/24"
 
 Resources:
   VPC:
@@ -40,14 +41,14 @@ Resources:
       EnableDnsHostnames: true
       Tags:
         - Key: Name
-          Value: !Ref EnvironmentName
+          Value: !Sub ${EnvironmentName} vpc
 
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
-          Value: !Ref EnvironmentName
+          Value: !Sub ${EnvironmentName} Internet Gateway
 
   InternetGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
@@ -110,6 +111,9 @@ Resources:
     Properties:
       AllocationId: !GetAtt NatGateway1EIP.AllocationId
       SubnetId: !Ref PublicSubnet1
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Nat Gateway
 
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -139,7 +143,7 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnet2
 
-  PrivateRouteTable1:
+  PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
@@ -147,23 +151,23 @@ Resources:
         - Key: Name
           Value: !Sub ${EnvironmentName} Private Routes (AZ1)
 
-  DefaultPrivateRoute1:
+  DefaultPrivateRoute:
     Type: AWS::EC2::Route
     Properties:
-      RouteTableId: !Ref PrivateRouteTable1
+      RouteTableId: !Ref PrivateRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId: !Ref NatGateway1
 
   PrivateSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref PrivateRouteTable1
+      RouteTableId: !Ref PrivateRouteTable
       SubnetId: !Ref PrivateSubnet1
 
   PrivateSubnet2RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      RouteTableId: !Ref PrivateRouteTable2
+      RouteTableId: !Ref PrivateRouteTable
       SubnetId: !Ref PrivateSubnet2
 
   NoIngressSecurityGroup:

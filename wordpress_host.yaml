@@ -9,6 +9,15 @@ Parameters:
     AllowedValues: [t2.micro, t2.small, t2.medium]
     Description: Please choose a valid instance type. 
 
+  SSHLocation:
+    Description: The IP address range that can be used to SSH to the EC2 instances
+    Type: String
+    MinLength: 9
+    MaxLength: 18
+    Default: 0.0.0.0/0
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+
   SSHKeyName: # Key Name 
     Type: String
     Default: ""
@@ -18,14 +27,19 @@ Parameters:
     Type: Number
     Default: 20
     Description: Please choose a valid Number
-    AllowedValues: [20, 30, 40, 50]  
+    AllowedValues: [20, 30, 40, 50] 
 
-  PrivateSubnet1: # Private Subnet 1 Id 
-    Description:  Enter the Private Subnet1 Id where you want to create WordPress Instance  
+  MyVPC: 
+    Description:  Enter the VPC Id where you want to create WordPress Instance  
     Type: String
     Default: ""
-  PrivateSubnet2: # Private Subnet 2 Id 
-    Description:  Enter the  Private Subnet2 Id where you want to create WordPress Instance  
+
+  PrivateSubnet1: # Private Subnet Id 
+    Description:  Enter the Private Subnet Id where you want to create WordPress Instance  
+    Type: String
+    Default: ""
+  PublicSubnet2: # Public Subnet Id 
+    Description:  Enter the  Public Subnet Id where you want to create WordPress Instance  
     Type: String
     Default: ""
 
@@ -67,7 +81,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Allow http to ALB sec group, 3306 to RDS database sec group, ssh to bastion sec group"
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref MyVPC
   MySecGroupIngressSSH:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: 
@@ -75,7 +89,8 @@ Resources:
       IpProtocol: tcp
       FromPort: 22
       ToPort: 22
-      SourceSecurityGroupId: !Ref BastionSecurityGroup
+      CidrIp: !Ref SSHLocation # delete this cidr ip when you have bastion sg
+      #SourceSecurityGroupId: !Ref BastionSecurityGroup
   MySecGroupIngressHTTP:  
     Type: AWS::EC2::SecurityGroupIngress
     Properties: 
@@ -83,7 +98,8 @@ Resources:
       IpProtocol: tcp
       FromPort: 80
       ToPort: 80
-      SourceSecurityGroupId: !Ref ELBSecurityGroup
+      CidrIp: !Ref SSHLocation # delete this cidr ip when you have elb sg
+      #SourceSecurityGroupId: !Ref ELBSecurityGroup
   MySecGroupIngressRDS: 
     Type: AWS::EC2::SecurityGroupIngress
     Properties: 
@@ -91,7 +107,8 @@ Resources:
       IpProtocol: tcp
       FromPort: 3306
       ToPort: 3306
-      SourceSecurityGroupId: !Ref RDSSecurityGroup
+      CidrIp: !Ref SSHLocation # delete this cidr ip when you have rds sg
+      #SourceSecurityGroupId: !Ref RDSSecurityGroup
 
   WordpressWebInstance: # WordPress Web Instance 
     Description:  Web Server needs to be created with bastion-key that's why its separate from the VPC stack

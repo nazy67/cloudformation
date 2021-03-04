@@ -1,7 +1,8 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: This Template is creats Multiple Security Groups 
+Description: This Template is creates multiple Security Groups bastion sg, elb sg, webserver sg, rds sg 
 
 Parameters:  #### Define Parameters #####
+
   SSHLocation:
     Description: The IP address range that can be used to SSH to the EC2 instances
     Type: String
@@ -10,7 +11,8 @@ Parameters:  #### Define Parameters #####
     Default: 0.0.0.0/0
     AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
     ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
-  PubPrivateVPC:
+    
+  MyVPC:
     Description:  Enter the VPC ID where you want to create Security Groups
     Type: String
     Default: ""
@@ -21,7 +23,7 @@ Resources:  #### Define Resources #####
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Allow SSH to  Web Server Security Group"
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref MyVPC
       SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: 22
@@ -32,7 +34,7 @@ Resources:  #### Define Resources #####
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Allow HTTP and HTTPS to everywhere"
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref MyVPC
       SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: 80
@@ -47,7 +49,7 @@ Resources:  #### Define Resources #####
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Allow http to ALB sec group, 3306 to RDS database sec group, ssh to bastion sec group"
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref MyVPC
   MySecGroupIngressSSH:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: 
@@ -77,7 +79,7 @@ Resources:  #### Define Resources #####
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Allow port 3306 to Web Servers Security Group"
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref MyVPC
   MySecurityGrpIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:

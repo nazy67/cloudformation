@@ -2,19 +2,19 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Creates ELB with a EC2 Target Group Associated
 ### Define Parameters
 Parameters:
-  TGName:
+  MyTgName:
     Type: String
     Default: "MyTargetGroup"  
   MyALBName: 
     Type: String
     Default: "MyALB"
-  ELBSecurityGroup: 
+  ELBSecurityGroupId: 
     Type: String
     Default: ""  
-  WordpressWebInstance: 
+  MyEc2InstanceId: 
     Type: String
     Default: ""   
-  PubPrivateVPC:
+  MyVPC:
     Type: String
     Default: ""  
   PublicSubnet1:
@@ -24,9 +24,9 @@ Parameters:
     Type: String
     Default: ""  
   AppLoadbalancerSslCertArn:
-    Description: SSL certificate for Application load balancer
+    Description: Enter your SSL certificate for Application load balancer
     Type: String
-    Default:  arn:aws:acm:us-east-1:974912841781:certificate/b3b5c0db-97a0-4ebc-8b8e-fb615aaf3e47 
+    Default: "" 
     
 
 ### Define Resouces 
@@ -50,14 +50,14 @@ Resources:
       TargetType: instance
       Targets:
       - Id:
-          Ref: WordpressWebInstance
+          Ref: WordpressWebInstanceId
       Matcher:
         HttpCode: '200'
       Name: !Ref TGName 
       TargetGroupAttributes:
       - Key: deregistration_delay.timeout_seconds
         Value: '20'
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref MyVPC
       Tags:
       - Key: Name
         Value: EC2TargetGroup
@@ -100,7 +100,7 @@ Resources:
       - Ref: PublicSubnet1
       - Ref: PublicSubnet2
       SecurityGroups:
-      - Ref: ELBSecurityGroup      
+      - Ref: ELBSecurityGroupId      
       
 
 Outputs:
@@ -111,7 +111,7 @@ Outputs:
   EC2TargetGroup:
     Description: 'My EC2 Target Group'
     Value:
-      Ref: TGName
+      Ref: MyALBName
   MyLoadBalancerArn:
     Description: 'Application Load Balancer'
     Value:
