@@ -67,14 +67,9 @@ Resources: #### Define Resources #####
       ImageId: !FindInMap [ AWSRegionArch2AMI, !Ref 'AWS::Region' , !FindInMap [ AWSInstanceType2Arch, !Ref InstanceType, Arch ] ]  
       KeyName: !Ref SSHKeyName
       InstanceType: !Ref InstanceType
-<<<<<<< HEAD:bastion_host_with_sg.yaml
       SubnetId: !Ref PublicSubnetAZ1
-      SecurityGroupIds: 
-      - !Ref BastionSecurityGroup
-=======
-      SubnetId: !Ref PublicSubnet1
       SecurityGroupIds: !Ref BastionSecurityGroup
->>>>>>> 2c4892eb7b38481e1788bd743e03b7d807f80c0c:bastion_host.yaml
+
       Tags:
       - Key: Name
         Value: BastionHost            
