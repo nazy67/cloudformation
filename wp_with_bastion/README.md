@@ -11,3 +11,6 @@
 ## Usage
 
 ## Resources
+
+## Useful links
+[AWS Cloudformation documetnation](https://docs.aws.amazon.com/cloudformation/)
