@@ -9,11 +9,11 @@
 ## Description
  Creating a infrastracture on CDN with VPC and subnets, and placing wordpress host and database on private subnets. Only access to wordpress is with Bastion host beacouse it was created wit bastion-key, and that's why template is separated into two parts.
  
- <img src="aws_image.png" alt="aws" width="800" height="500">
+ <img src="images/aws_image.png" alt="aws" width="800" height="500">
  
- <img src="security_group.png" alt="aws" width="800" height="500">
+ <img src="images/security_group.png" alt="aws" width="800" height="500">
  
- <img src="vpc.png" alt="aws" width="800" height="500">
+ <img src="images/vpc.png" alt="aws" width="800" height="500">
 ## Usage
 
 ## Resources
