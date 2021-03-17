@@ -4,14 +4,14 @@ Description: Creates ELB with a EC2 Target Group Associated
 Parameters:
   MyTgName:
     Type: String
-    Default: "MyTargetGroup"  
+    Default: "my-tg"  
   MyALBName: 
     Type: String
-    Default: "MyALB"
+    Default: "my-alb"
   ELBSecurityGroupId: 
     Type: String
     Default: ""  
-  MyEc2InstanceId: 
+  Ec2InstanceId: 
     Type: String
     Default: ""   
   MyVPC:
@@ -22,16 +22,15 @@ Parameters:
     Default: ""
   PublicSubnet2:
     Type: String
-    Default: ""  
+    Default: ""
   AppLoadbalancerSslCertArn:
     Description: Enter your SSL certificate for Application load balancer
     Type: String
-    Default: "" 
+    Default: "iam-servercertgetattributes -s certname" 
     
-
 ### Define Resouces 
-Resources:
- 
+  Resources:
+
   EC2TargetGroup: # Target Group
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     DependsOn: 
@@ -50,10 +49,10 @@ Resources:
       TargetType: instance
       Targets:
       - Id:
-          Ref: WordpressWebInstanceId
+          Ref: Ec2InstanceId
       Matcher:
         HttpCode: '200'
-      Name: !Ref TGName 
+      Name: !Ref MyTgName 
       TargetGroupAttributes:
       - Key: deregistration_delay.timeout_seconds
         Value: '20'
