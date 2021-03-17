@@ -15,4 +15,4 @@
 ## Useful links
 [AWS Cloudformation documetnation](https://docs.aws.amazon.com/cloudformation/)
 
-[Lucid chart](https://lucid.app/users/login#/login)
+[Lucid chart for diagram](https://lucid.app/users/login#/login)
