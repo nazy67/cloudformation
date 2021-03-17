@@ -13,7 +13,7 @@
  
  <img src="security_group.png" alt="aws" width="800" height="500">
  
- <img src="" alt="aws" width="800" height="500">
+ <img src="vpc.png" alt="aws" width="800" height="500">
 ## Usage
 
 ## Resources
