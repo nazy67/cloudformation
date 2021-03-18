@@ -11,23 +11,25 @@
 ## Description
 
 <p>
-Template is reusable, it will provision VPC with CIDR block 10.0.0.0/16 and 2 Public subnets with CIDR blocks 10.0.1.0/24 & 10.0.2.0/24 and 2 Private subnets with CIDR blocks 10.0.11.0/24 & 10.0.11.0/24. Bastion instance in my case will be on Public subnet and WordPress host with RDS database will be on private subnets. Only access to WordPress host is through Bastion host because it will created with bastion-key, and that's the reason why template is separated into two parts. The first part of template has resources such as: VPC, Security groups and Bastion Host. And the second part of the template has WordPress Host, RDS database, ALB and Route 53. Another important thing is to mention that the second template will use the some resources from the first template as security groups, VPC and subnet IDs, newly created bastion-key (this part will be done manually). 
+Template is reusable, it will provision VPC with CIDR block 10.0.0.0/16 and 2 Public subnets with CIDR blocks 10.0.1.0/24 & 10.0.2.0/24 and 2 Private subnets with CIDR blocks 10.0.11.0/24 & 10.0.11.0/24. Bastion instance in my case will be on Public subnet and WordPress Instance with RDS database will be on private subnets. Only access to WordPress instance is through Bastion instance, because it will created with bastion-key (this part will be done manually), and that's the reason why template is separated into two parts. The first part of template has resources such as: VPC, Security groups and Bastion instance. And the second part of the template has WordPress instance, RDS database, ALB and Route 53 resources. Another important thing is to mention that the second template will use the some resources from the first template as security groups, VPC and subnet IDs, and newly created bastion-key will be chosen from the ssh-key options. 
 </p> 
 <p>
-VPC needs to have an access to the Internet and Internet Gateway will solve that and when it gets created it will attached to VPC.
-</p>
-<p>For private subnets Internet comes with NAT Gateway it will be created with Elastic IP address (the reason behind it,if you want to updates your website it has to have static IP) and NAT Gateway will get Internet from one of the public subnets, because in that manner our private subnets won’t be open to the world and secure. 
+VPC needs to have an access to the Internet and Internet Gateway will solve that and when it gets created it will attached to VPC. For private subnets Internet comes with NAT Gateway it will be created with Elastic IP address (the reason behind it,if you want to updates your website it has to have static IP) and NAT Gateway will get Internet from one of the public subnets, because in that manner our private subnets won’t be open to the world and secure. 
 </p>
 <p>
-The next resource is Route tables (public and private) 2 public subnets will be assosiated with  Public-RT attached with Internet Gateway and 2 private subnets will be assosiated with  Private-RT which is attached to Nat Gateway. 
+The next resource is Route tables (public and private) 2 public subnets will be assosiated with  Public-RT attached with Internet Gateway and 2 private subnets will be assosiated with  Private-RT which is attached to Nat Gateway. When VPC gets created Main RT gets created with it, we can use that as a Public RT or create  new one. In this demo I did created brand new route tables. The diagram below will show detailed VPC structure, that I described above: 
 </p>
+
+<img src="images/vpc.png" alt="aws" width="800" height="500"> 
 
 The next step is security groups:
 
   - Bastion Security group with SSH port open to 0.0.0.0/0 (or to my IP address).
   - Load balancer security group  with HTTPS 443 and HTTP 80 ports open to 0.0.0.0/0.
   - RDS security group with MySQL port 3306 open to WordPress host's Security Group. 
-  - WordPress host's Security group with port MySQL 3306 open to RDS's Security Group, HTTP port 80 open to ELB Security Group, and SSH port 22 will be open to Bastion Host Securty group.
+  - WordPress host's Security group with port MySQL 3306 open to RDS's Security Group, HTTP port 80 open to ELB Security Group, and SSH port 22 will be open to Bastion Host Securty group. The next diagram will show it more clearer:
+
+<img src="images/security_group.png" alt="aws" width="800" height="500">
 
 ## WordPress host
 <p>
@@ -105,10 +107,6 @@ Another important thing to remember to keep in mind that, always put . after you
 - Route 53
 
 ## Diagram
-
-<img src="images/vpc.png" alt="aws" width="800" height="500">
-
-<img src="images/security_group.png" alt="aws" width="800" height="500">
 
 <img src="images/aws_image.png" alt="aws" width="800" height="500">
 
