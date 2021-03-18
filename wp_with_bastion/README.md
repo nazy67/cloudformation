@@ -100,12 +100,6 @@ Another important thing to remember to keep in mind that, always put . after you
 ### DNS
 - Route 53
 
-## Useful links
-
-[AWS Cloudformation documetnation](https://docs.aws.amazon.com/cloudformation/)
-
-[Lucid chart for diagrams](https://lucid.app/users/login#/login)
-
 ## Diagram
 
  <img src="images/aws_image.png" alt="aws" width="800" height="500">
@@ -124,3 +118,9 @@ The following  plugins are required to be installed and activated in the WordPre
 
 These plugins helps you to make your application secure , without redirectiong  your HTTP/80 listener to HTTPS/443.
 </p>
+
+## Useful links
+
+[AWS Cloudformation documetnation](https://docs.aws.amazon.com/cloudformation/)
+
+[Lucid chart for diagrams](https://lucid.app/users/login#/login)
