@@ -22,10 +22,12 @@ After that created VPC needs to have an access to the Internet and Internet Gate
 The next resource is Route tables (public and private) 2 public subnets will be assosiated with  Public-RT attached with Internet Gateway and 2 private subnets will be assosiated with  Private-RT which is attached to Nat Gateway. 
 </p>
 
-The next step is security groups: 
+The next step is security groups:
+
+  - Bastion Security group with SSH port open to 0.0.0.0/0 (or to my IP address).
   - Load balancer security group  with HTTPS 443 and HTTP 80 ports open to 0.0.0.0/0.
   - RDS security group with MySQL port 3306 open to WordPress host's Security Group. 
-  - WordPress host's Security group with port MySQL 3306 open to RDS's Security Group, and HTTP port 80 open to ELB Security Group.
+  - WordPress host's Security group with port MySQL 3306 open to RDS's Security Group, HTTP port 80 open to ELB Security Group, and SSH port 22 will be open to Bastion Host Securty group.
 
 ## WordPress host
 <p>
