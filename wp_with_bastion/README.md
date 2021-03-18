@@ -84,7 +84,8 @@ Another important thing to remember to keep in mind that, always put . after you
   - Private Route Table
  
 - Security Groups
-  - EC2 Security Group
+  - EC2 Security Group for Bastion
+  - EC2 Security Group for WordPress
   - RDS Security Group
   - ALB Security Group
 
@@ -93,6 +94,7 @@ Another important thing to remember to keep in mind that, always put . after you
 ### Application
 
 - EC2 Instance
+  - Bastion Instance (Frontend)
   - WordPress (Frontend)
 - RDS
   - Database (Backend)
@@ -102,11 +104,11 @@ Another important thing to remember to keep in mind that, always put . after you
 
 ## Diagram
 
- <img src="images/aws_image.png" alt="aws" width="800" height="500">
- 
- <img src="images/security_group.png" alt="aws" width="800" height="500">
- 
- <img src="images/vpc.png" alt="aws" width="800" height="500">
+<img src="images/vpc.png" alt="aws" width="800" height="500">
+
+<img src="images/security_group.png" alt="aws" width="800" height="500">
+
+<img src="images/aws_image.png" alt="aws" width="800" height="500">
 
 ## Notes 
 <p>
