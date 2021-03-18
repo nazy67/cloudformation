@@ -1,6 +1,7 @@
 ## WordPress on Cloudformation with Bastion host
 
 ## Prerequisites:
+
    - AWS account
    - SSL Certificate
    - Domain Name
@@ -9,9 +10,8 @@
    
 ## Description
 
- Creating a infrastracture on CDN with VPC and subnets, and placing wordpress host and database on private subnets. Only access to wordpress is with Bastion host beacouse it was created wit bastion-key, and that's why template is separated into two parts.
 <p>
-This template is reusable it will provision VPC with CIDR 10.0.0.0/16, with  2 Public with CIDR 10.0.1.0/24 & 10.0.2.0/24 and 2 private subnets with CIDR 10.0.11.0/24 & 10.0.11.0/24.
+This template is reusable it will provision VPC with CIDR 10.0.0.0/16, with  2 Public with CIDR 10.0.1.0/24 & 10.0.2.0/24 and 2 private subnets with CIDR 10.0.11.0/24 & 10.0.11.0/24. Bastion Host in my case will be on Public subnet and WordPress host with RDS database will be on private subnets. Only access to wordpress is through Bastion host beacause it will created with bastion-key, and that's the reason why template is separated into two parts.
 </p> 
 <p>
 After that created VPC needs to have an access to the Internet and Internet Gateway will solve that when it gets created it will attached to VPC.
