@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: This Template Creates a VPC with 2 Public and 2 Private Subnets. And security groups for our resouces.
+Description: This Template Creates a VPC with 2 Public and 2 Private Subnets. And security groups and Bastion instance for our resouces.
 
 ### DEFINE PARAMETERS ###
 

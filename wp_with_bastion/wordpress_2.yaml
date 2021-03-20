@@ -3,72 +3,35 @@ Description: This template creates WordPress Instance, RDS database,ALB and Rout
 
 ### Define Parameters ###
 
-Parameters:
-  MyVPC:
-    Description: Enter you VPC Id  
-    Type: String
-    Default: ""   
-  AZ1:
-    Description: The Availability Zone to use for the first subnet
-    Type: AWS::EC2::AvailabilityZone::Name
-  AZ2:
-    Description: The Availability Zone to use for the second subnet
-    Type: AWS::EC2::AvailabilityZone::Name
-  PrivSubnet1:  
-    Type: String
-    Default: ""
-  PrivSubnet2:  
-    Type: String
-    Default: ""
-  PubSubnet1: 
-    Type: String
-    Default: ""
-  PubSubnet2:
-    Type: String
-    Default: ""    
-  
-  # Security Groups
-  WordPressSecGroup: 
-    Description: Enter your WebServer sec grp id    
-    Type: String
-    Default: ""
-  RdsSecGroup: 
-    Description: Enter your RDS sec grp id 
-    Type: String
-    Default: ""
-  ALBSecGrp: 
-    Description: Enter your ELB sec grp id 
-    Type: String
-    Default: ""   
-
+Parameters:  
   # RDS DataBase Parameters
-  DBUserName:  
+  DbUserName:  
     NoEcho: 'true'
     Type: String
     MinLength: '1'
     MaxLength: '16'
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
     Description: must begin with a letter and contain only alphanumeric characters.
-  DBUserPassword:   
+  DbUserPassword:   
     NoEcho: 'true'
     Type: String
     MinLength: '8'
     MaxLength: '41'
     AllowedPattern: '[a-zA-Z0-9]*'
     Description: must contain only alphanumeric characters.  
-  DataBaseInstanceId:  
+  DbInstanceId:  
     Default: mydbinstance
     Type: String
     MinLength: '1'
     MaxLength: '63'
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
     Description: Must begin with a letter and must not end with a hyphen or contain two consecutive hyphens.
-  DataBaseInstanceClass:  
+  DbInstanceClass:  
     Type: String
     Default: db.t2.micro
     AllowedValues: [db.t2.micro, db.t2.medium, db.t2.small]
     Description: must select a valid database instance type.
-  DBAllocatedStorage:  
+  DbAllocatedStorage:  
     Default: '20'
     Type: Number
     MinValue: '5'
@@ -76,12 +39,7 @@ Parameters:
     Description: must be between 20 and 65536 GiB. 
   StorageType: 
     Type: String
-    Default: gp2
-      
-  AppLoadbalancerSslCertArn:
-    Description: Enter your SSL certificate for Application load balancer
-    Type: String
-    Default: "arn:aws:acm:us-east-1:974912841781:certificate/b3b5c0db-97a0-4ebc-8b8e-fb615aaf3e47" 
+    Default: gp2 
   
   # Route 53 parameters 
   WpWebDomain:
@@ -90,13 +48,17 @@ Parameters:
   WpHostedZone:
     Description: "A reference to the Hosted Zone example.com"
     Type: "String"
-  WPWebALBHostedZoneId: 
+  WebAlbHostedZoneId: 
     Description: "A reference to the Webserver ELB (Canonical) Hosted Zone ID "
     Type: String
     Default: Z35SXDOTRQ7X7K 
     AllowedValues: 
       - Z35SXDOTRQ7X7K # us-east-1
       - Z3AADJGX6KTTL2 # us-east-2
+  AppLoadbalancerSslCertArn:
+    Description: Enter your SSL certificate for Application load balancer
+    Type: String
+    Default: ""
 
   ###  Tags   ###
   WordPressName: 
@@ -105,9 +67,9 @@ Parameters:
   DbSubGrpName:
     Type: String
     Default: dbsubgrp
-  DataBaseName: 
+  DbName: 
     Type: String
-    Default: wpdb
+    Default: wordpressdb
   RdsDbTagName: 
     Type: String
     Default: my-rds
@@ -129,7 +91,7 @@ Parameters:
     Default: 20
     Description: Please choose a valid Number
     AllowedValues: [20, 30, 40, 50]
-  SSHKeyName:
+  SshKeyName:
     Description: 'The name of your local machine ssh-key'
     Type: 'AWS::EC2::KeyPair::KeyName'
     Default: ""
@@ -171,7 +133,7 @@ Resources:
           - Arch
       KeyName: !Ref SSHKeyName   
       InstanceType: !Ref Ec2InstanceType
-      SubnetId: !Ref PrivSubnet2
+      SubnetId: !Ref PrivateSubnet2
       SecurityGroupIds: 
         - !Ref WordPressSecGroup
       UserData:
@@ -205,11 +167,11 @@ Resources:
   RdsDbSubGrp: 
     Type: AWS::RDS::DBSubnetGroup
     Properties: 
-      DBSubnetGroupDescription: DataBase Sub Group
+      DBSubnetGroupDescription: Database Sub Group
       DBSubnetGroupName: !Ref DbSubGrpName
       SubnetIds:
-        - !Ref PrivSub2
-        - !Ref PrivSub1
+        - !Ref PrivSubnet2
+        - !Ref PrivSubnet1
 
   # My RDS DB Instance
   MyRdsDb:  
@@ -218,15 +180,15 @@ Resources:
       VPCSecurityGroups: 
         - !Ref RdsSecGroup
       DBSubnetGroupName: !Ref RdsDbSubGrp
-      AllocatedStorage: !Ref DBAllocatedStorage
+      AllocatedStorage: !Ref DbAllocatedStorage
       DBInstanceClass:  !Ref DataBaseInstanceClass
       Engine: MariaDB
       EngineVersion: 10.4.8
       #StorageEncrypted: true
       DBInstanceIdentifier:  !Ref DataBaseInstanceId
-      MasterUsername: !Ref DBUserName
-      MasterUserPassword: !Ref DBUserPassword
-      DBName: !Ref DataBaseName
+      MasterUsername: !Ref DbUserName
+      MasterUserPassword: !Ref DbUserPassword
+      DBName: !Ref DbName
       Port: 3306
       BackupRetentionPeriod: 0   
       PubliclyAccessible: false  
@@ -324,7 +286,7 @@ Resources:
  ### Outputs ###
 Outputs:
   WordpressWebInstance:
-    Description: WordPress Web Server Id
+    Description: WordPress Instance Id
     Value: !Ref WordpressWebInstance                
   RDSDataBaseName:
     Description:  My RDS Database Name
