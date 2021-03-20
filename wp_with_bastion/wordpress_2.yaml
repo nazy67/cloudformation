@@ -8,7 +8,7 @@ Parameters:
   PubPrivateVPC:
     Description: Enter you VPC ID  
     Type: String
-    Default: ""   
+    Default: "vpc-0c2eaa3cce7d96959"   
   AvailabilityZone1:
     Description: The AvailabilityZone to use for the first subnet
     Type: AWS::EC2::AvailabilityZone::Name
@@ -17,30 +17,30 @@ Parameters:
     Type: AWS::EC2::AvailabilityZone::Name
   PrivateSubnet1:  
     Type: String
-    Default: ""
+    Default: "subnet-081150895bdd61f6d"
   PrivateSubnet2:  
     Type: String
-    Default: ""
+    Default: "subnet-0b3ed0f8a5d6e5350"
   PublicSubnet1: 
     Type: String
-    Default: ""
+    Default: "subnet-0f5961f2ba60fd14a"
   PublicSubnet2:
     Type: String
-    Default: ""    
+    Default: "subnet-0628c0128f9dfca5b"    
   
   # Security Groups
   WebServerSecurityGroup: 
     Description: Enter your WebServer sec grp id    
     Type: String
-    Default: ""
+    Default: "sg-0e26fe07f1b385d51"
   RDSSecurityGroup: 
     Description: Enter your RDS sec grp id 
     Type: String
-    Default: ""
+    Default: "sg-0dce7f72d819a2a19"
   ELBSecurityGroup: 
     Description: Enter your ELB sec grp id 
     Type: String
-    Default: ""   
+    Default: "sg-0ce1f93fc203f1503"   
 
   # RDS DataBase Parameters
   DBUserName:  
@@ -82,14 +82,14 @@ Parameters:
   AppLoadbalancerSslCertArn:
     Description: Enter your SSL certificate for Application load balancer
     Type: String
-    Default: "" 
+    Default: "arn:aws:acm:us-east-1:974912841781:certificate/b3b5c0db-97a0-4ebc-8b8e-fb615aaf3e47" 
   
   # Route 53 parameters 
   WpWebDomain:
-    Description: "A reference to the Webserver Fully Qualified Domain Name domain name example.com"
+    Description: "A reference to the Webserver Fully Qualified Domain Name domain name www.example.com"
     Type: "String" 
   WpHostedZone:
-    Description: "A reference to the Hosted Zone www.example.com"
+    Description: "A reference to the Hosted Zone example.com"
     Type: "String"
   WPWebALBHostedZoneId: 
     Description: "A reference to the Webserver ELB (Canonical) Hosted Zone ID "
@@ -102,10 +102,13 @@ Parameters:
   ###  Tags   ###
   WordpressTagName: 
     Type: String
-    Default: wordpress-web
+    Default: wp-web
+  DBSubGrpTagName:
+    Type: String
+    Default: dbsubgrp
   DataBaseName: 
     Type: String
-    Default: wordpress-db
+    Default: wpdb
   RdsDbTagName: 
     Type: String
     Default: my-rdsdb
@@ -114,7 +117,7 @@ Parameters:
     Default: target-grp
   AlbTagName:
     Type: String
-    Default: app-load-balancer
+    Default: app-lb
   
   # Wordpress Web Instance parameters
   WebInstanceType:  
@@ -127,6 +130,18 @@ Parameters:
     Default: 20
     Description: Please choose a valid Number
     AllowedValues: [20, 30, 40, 50]
+  SSHKeyName:
+    Description: 'The name of your local machine ssh-key'
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    Default: "bastion-key"
+  SSHLocation:
+    Description: The IP address range that can be used to SSH to WordPress host
+    Type: String
+    MinLength: 9
+    MaxLength: 18
+    Default: 0.0.0.0/0
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
 
 Mappings: 
   AWSInstanceType2Arch:    
@@ -145,7 +160,7 @@ Mappings:
 ### Define Resources ###
 
 Resources:
-  # Word Press Web Instance
+  # WordPress Instance
   WordpressWebInstance: 
     Description:  Word press Web Instance 
     Type: AWS::EC2::Instance
@@ -158,10 +173,11 @@ Resources:
           - AWSInstanceType2Arch
           - Ref: WebInstanceType
           - Arch
+      KeyName: !Ref SSHKeyName   
       InstanceType: !Ref WebInstanceType
       SubnetId: !Ref PrivateSubnet1
       SecurityGroupIds: 
-        - !Ref WebServerSecurityGroup.GroupId
+        - !Ref WebServerSecurityGroup #.GroupId
       UserData:
         Fn::Base64: 
           !Sub |
@@ -187,20 +203,17 @@ Resources:
             VolumeSize: !Ref VolumeSize
       Tags: 
         - Key: Name
-          Value: WordpressTagName 
+          Value: !Ref WordpressTagName 
 
   # Database Subnet Group
   RDSDBSubnetGroup: 
     Type: AWS::RDS::DBSubnetGroup
     Properties: 
       DBSubnetGroupDescription: DataBase Subnet Group
-      DBSubnetGroupName: RDSDBPrivateSubnet
+      DBSubnetGroupName: !Ref DBSubGrpTagName
       SubnetIds:
-        - !Ref PrivateSubnet1
         - !Ref PrivateSubnet2
-      Tags:
-        - Key: Name
-          Value: DBSubnetGroupName
+        - !Ref PrivateSubnet1
 
   # My RDS DB Instance
   MyRDSDB:  
@@ -332,9 +345,9 @@ Outputs:
   WpWebAlbDnsName:
     Description: 'Webserver ELB DNS Name A Record'
     Value: !GetAtt MyALB.DNSName
-  EC2TargetGroup:
+  EC2TargetGroupName:
     Description: 'My EC2 Target Group'
-    Value: !Ref TargetGrpName
+    Value: !Ref TargetGrpTagName
   MyLoadBalancerArn:
     Description: 'Application Load Balancer'
     Value: !Ref MyALB
