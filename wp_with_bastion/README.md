@@ -1,3 +1,5 @@
+In progress ...
+
 ## WordPress on Cloudformation with Bastion host
 
 ## Prerequisites:
@@ -11,7 +13,7 @@
 ## Description
 
 <p>
-Template is reusable, it will provision VPC with CIDR block 10.0.0.0/16 and 2 Public subnets with CIDR blocks 10.0.1.0/24 & 10.0.2.0/24 and 2 Private subnets with CIDR blocks 10.0.11.0/24 & 10.0.11.0/24. Bastion instance in my case will be on Public subnet and WordPress Instance with RDS database will be on private subnets. Only access to WordPress instance is through Bastion instance, because it will created with bastion-key (this part will be done manually), and that's the reason why template is separated into two parts. The first part of template has resources such as: VPC, Security groups and Bastion instance. And the second part of the template has WordPress instance, RDS database, ALB and Route 53 resources. Another important thing is to mention that the second template will use the some resources from the first template as security groups, VPC and subnet IDs, and newly created bastion-key will be chosen from the ssh-key options. 
+Template is reusable, it will provision VPC with CIDR block 10.0.0.0/16 and 2 Public subnets with CIDR blocks 10.0.1.0/24 & 10.0.2.0/24 and 2 Private subnets with CIDR blocks 10.0.11.0/24 & 10.0.11.0/24. Bastion instance in my case will be on Public subnet and WordPress Instance with RDS database will be on private subnets. Only access to WordPress instance is through Bastion instance, because it will created with bastion-key (this part will be done manually), and that's the reason why template is separated into two parts. The first part of template has resources such as: VPC, Security groups and Bastion instance. And the second part of the template has WordPress instance, RDS database, ALB and Route 53 resources. Another important thing is to mention that the second template will use the some resources from the first template as security groups, VPC and subnet IDs, and newly created bastion-key will be chosen from the ssh-key options. For that resources will be imported from the cloudformation.  
 </p> 
 <p>
 VPC needs to have an access to the Internet and Internet Gateway will solve that and when it gets created it will attached to VPC. For private subnets Internet comes with NAT Gateway it will be created with Elastic IP address (the reason behind it,if you want to updates your website it has to have static IP) and NAT Gateway will get Internet from one of the public subnets, because in that manner our private subnets won’t be open to the world and secure. 
