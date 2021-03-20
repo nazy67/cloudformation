@@ -121,7 +121,7 @@ The following  plugins are required to be installed and activated in the WordPre
   - Redirection
 
 These plugins helps you to make your application secure , without redirectiong  your HTTP/80 listener to HTTPS/443.
-</p>
+</p> 
 
 ## Useful links
 
