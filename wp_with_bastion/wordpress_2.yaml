@@ -8,7 +8,7 @@ Parameters:
   PubPrivateVPC:
     Description: Enter you VPC ID  
     Type: String
-    Default: "vpc-0c2eaa3cce7d96959"   
+    Default: ""   
   AvailabilityZone1:
     Description: The AvailabilityZone to use for the first subnet
     Type: AWS::EC2::AvailabilityZone::Name
@@ -17,30 +17,30 @@ Parameters:
     Type: AWS::EC2::AvailabilityZone::Name
   PrivateSubnet1:  
     Type: String
-    Default: "subnet-081150895bdd61f6d"
+    Default: ""
   PrivateSubnet2:  
     Type: String
-    Default: "subnet-0b3ed0f8a5d6e5350"
+    Default: ""
   PublicSubnet1: 
     Type: String
-    Default: "subnet-0f5961f2ba60fd14a"
+    Default: ""
   PublicSubnet2:
     Type: String
-    Default: "subnet-0628c0128f9dfca5b"    
+    Default: ""    
   
   # Security Groups
   WebServerSecurityGroup: 
     Description: Enter your WebServer sec grp id    
     Type: String
-    Default: "sg-0e26fe07f1b385d51"
+    Default: ""
   RDSSecurityGroup: 
     Description: Enter your RDS sec grp id 
     Type: String
-    Default: "sg-0dce7f72d819a2a19"
+    Default: ""
   ELBSecurityGroup: 
     Description: Enter your ELB sec grp id 
     Type: String
-    Default: "sg-0ce1f93fc203f1503"   
+    Default: ""   
 
   # RDS DataBase Parameters
   DBUserName:  
@@ -82,7 +82,7 @@ Parameters:
   AppLoadbalancerSslCertArn:
     Description: Enter your SSL certificate for Application load balancer
     Type: String
-    Default: "arn:aws:acm:us-east-1:974912841781:certificate/b3b5c0db-97a0-4ebc-8b8e-fb615aaf3e47" 
+    Default: "" 
   
   # Route 53 parameters 
   WpWebDomain:
