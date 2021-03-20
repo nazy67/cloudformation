@@ -1,46 +1,45 @@
 AWSTemplateFormatVersion: 2010-09-09 
-Description: This template creates wordpress host with bastion-key, RDS and ALB Route 53.
+Description: This template creates WordPress Instance, RDS database,ALB and Route 53.
 
 ### Define Parameters ###
 
 Parameters:
-  # Network 
-  PubPrivateVPC:
-    Description: Enter you VPC ID  
+  MyVPC:
+    Description: Enter you VPC Id  
     Type: String
-    Default: "vpc-0c2eaa3cce7d96959"   
-  AvailabilityZone1:
-    Description: The AvailabilityZone to use for the first subnet
+    Default: ""   
+  AZ1:
+    Description: The Availability Zone to use for the first subnet
     Type: AWS::EC2::AvailabilityZone::Name
-  AvailabilityZone2:
-    Description: The AvailabilityZone to use for the second subnet
+  AZ2:
+    Description: The Availability Zone to use for the second subnet
     Type: AWS::EC2::AvailabilityZone::Name
-  PrivateSubnet1:  
+  PrivSubnet1:  
     Type: String
-    Default: "subnet-081150895bdd61f6d"
-  PrivateSubnet2:  
+    Default: ""
+  PrivSubnet2:  
     Type: String
-    Default: "subnet-0b3ed0f8a5d6e5350"
-  PublicSubnet1: 
+    Default: ""
+  PubSubnet1: 
     Type: String
-    Default: "subnet-0f5961f2ba60fd14a"
-  PublicSubnet2:
+    Default: ""
+  PubSubnet2:
     Type: String
-    Default: "subnet-0628c0128f9dfca5b"    
+    Default: ""    
   
   # Security Groups
-  WebServerSecurityGroup: 
+  WordPressSecGroup: 
     Description: Enter your WebServer sec grp id    
     Type: String
-    Default: "sg-0e26fe07f1b385d51"
-  RDSSecurityGroup: 
+    Default: ""
+  RdsSecGroup: 
     Description: Enter your RDS sec grp id 
     Type: String
-    Default: "sg-0dce7f72d819a2a19"
-  ELBSecurityGroup: 
+    Default: ""
+  ALBSecGrp: 
     Description: Enter your ELB sec grp id 
     Type: String
-    Default: "sg-0ce1f93fc203f1503"   
+    Default: ""   
 
   # RDS DataBase Parameters
   DBUserName:  
@@ -100,10 +99,10 @@ Parameters:
       - Z3AADJGX6KTTL2 # us-east-2
 
   ###  Tags   ###
-  WordpressTagName: 
+  WordPressName: 
     Type: String
-    Default: wp-web
-  DBSubGrpTagName:
+    Default: wp-instance
+  DbSubGrpName:
     Type: String
     Default: dbsubgrp
   DataBaseName: 
@@ -111,7 +110,7 @@ Parameters:
     Default: wpdb
   RdsDbTagName: 
     Type: String
-    Default: my-rdsdb
+    Default: my-rds
   TargetGrpTagName:
     Type: String
     Default: target-grp
@@ -120,7 +119,7 @@ Parameters:
     Default: app-lb
   
   # Wordpress Web Instance parameters
-  WebInstanceType:  
+  Ec2InstanceType:  
     Type: String   
     Default: t2.micro
     AllowedValues: [t2.micro, t2.small, t2.medium]
@@ -133,15 +132,14 @@ Parameters:
   SSHKeyName:
     Description: 'The name of your local machine ssh-key'
     Type: 'AWS::EC2::KeyPair::KeyName'
-    Default: "bastion-key"
+    Default: ""
   SSHLocation:
-    Description: The IP address range that can be used to SSH to WordPress host
     Type: String
     MinLength: 9
     MaxLength: 18
     Default: 0.0.0.0/0
     AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
-    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+    Description: must be a valid IP CIDR range of the form x.x.x.x/x.
 
 Mappings: 
   AWSInstanceType2Arch:    
@@ -160,9 +158,8 @@ Mappings:
 ### Define Resources ###
 
 Resources:
-  # WordPress Instance
-  WordpressWebInstance: 
-    Description:  Word press Web Instance 
+  WordPressInstance: 
+    Description:  WordPress Instance 
     Type: AWS::EC2::Instance
     Properties:
       ImageId:  
@@ -171,13 +168,12 @@ Resources:
         - Ref: AWS::Region
         - Fn::FindInMap:
           - AWSInstanceType2Arch
-          - Ref: WebInstanceType
           - Arch
       KeyName: !Ref SSHKeyName   
-      InstanceType: !Ref WebInstanceType
-      SubnetId: !Ref PrivateSubnet1
+      InstanceType: !Ref Ec2InstanceType
+      SubnetId: !Ref PrivSubnet2
       SecurityGroupIds: 
-        - !Ref WebServerSecurityGroup #.GroupId
+        - !Ref WordPressSecGroup
       UserData:
         Fn::Base64: 
           !Sub |
@@ -203,25 +199,25 @@ Resources:
             VolumeSize: !Ref VolumeSize
       Tags: 
         - Key: Name
-          Value: !Ref WordpressTagName 
+          Value: !Ref WordPressName 
 
   # Database Subnet Group
-  RDSDBSubnetGroup: 
+  RdsDbSubGrp: 
     Type: AWS::RDS::DBSubnetGroup
     Properties: 
-      DBSubnetGroupDescription: DataBase Subnet Group
-      DBSubnetGroupName: !Ref DBSubGrpTagName
+      DBSubnetGroupDescription: DataBase Sub Group
+      DBSubnetGroupName: !Ref DbSubGrpName
       SubnetIds:
-        - !Ref PrivateSubnet2
-        - !Ref PrivateSubnet1
+        - !Ref PrivSub2
+        - !Ref PrivSub1
 
   # My RDS DB Instance
-  MyRDSDB:  
+  MyRdsDb:  
     Type: AWS::RDS::DBInstance
     Properties:
       VPCSecurityGroups: 
-        - !Ref RDSSecurityGroup
-      DBSubnetGroupName: !Ref RDSDBSubnetGroup
+        - !Ref RdsSecGroup
+      DBSubnetGroupName: !Ref RdsDbSubGrp
       AllocatedStorage: !Ref DBAllocatedStorage
       DBInstanceClass:  !Ref DataBaseInstanceClass
       Engine: MariaDB
@@ -265,7 +261,7 @@ Resources:
       TargetGroupAttributes:
       - Key: deregistration_delay.timeout_seconds
         Value: '20'
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref MyVPC
       Tags:
       - Key: Name
         Value: !Ref TargetGrpTagName
