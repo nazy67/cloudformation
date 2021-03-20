@@ -1,11 +1,11 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: This Template Creates a VPC with 2 Public and 2 Private Subnets. And security groups and Bastion instance for our resouces.
+Description: This Template Creates a VPC with 2 Public and 2 Private Subnets. And security groups for our resouces.
 
 ### DEFINE PARAMETERS ###
 
 Parameters: 
   #  VPC Parameters
-  CidrBlock: 
+  VPCCidrBlock: 
     AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
     Default: 10.0.0.0/16
     Description: VPC CIDR Block (eg 10.0.0.0/16)
@@ -46,13 +46,12 @@ Parameters:
     Type: 'AWS::EC2::KeyPair::KeyName'
     Default: ""
   SSHLocation:
-    Description: The IP address range that can be used to SSH to the EC2 instances
+    Description: must be a valid IP CIDR range of the form x.x.x.x/x.
     Type: String
     MinLength: 9
     MaxLength: 18
     Default: 0.0.0.0/0
     AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
-    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
   InstanceType: 
     Description: Choose a valid Instance Type
     Type: String
@@ -79,10 +78,10 @@ Mappings:
 
 Resources: 
   # VPC
-  PubPrivateVPC: 
+  myVPC: 
     Type: 'AWS::EC2::VPC'
     Properties:
-      CidrBlock: !Ref CidrBlock
+      CidrBlock: !Ref VPCCidrBlock
       EnableDnsSupport: 'true'
       EnableDnsHostnames: 'true'  
       InstanceTenancy: 'default' #  or dedicated
@@ -95,7 +94,7 @@ Resources:
   PublicSubnet1: 
     Type: 'AWS::EC2::Subnet'
     Properties:
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref myVPC
       AvailabilityZone: !Select [ '0', !GetAZs ]
       CidrBlock: !Ref PublicSubnetCIDR1
       MapPublicIpOnLaunch: 'true'
@@ -105,7 +104,7 @@ Resources:
   PublicSubnet2: 
     Type: 'AWS::EC2::Subnet'
     Properties:
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref myVPC
       AvailabilityZone: !Select [ '1', !GetAZs ]    
       CidrBlock: !Ref PublicSubnetCIDR2
       MapPublicIpOnLaunch: 'true'
@@ -117,7 +116,7 @@ Resources:
   PrivateSubnet1: 
     Type: 'AWS::EC2::Subnet'
     Properties:
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref myVPC
       AvailabilityZone: !Select [ '0', !GetAZs ]
       CidrBlock: !Ref PrivateSubnetCIDR1
       MapPublicIpOnLaunch: false
@@ -127,7 +126,7 @@ Resources:
   PrivateSubnet2: 
     Type: 'AWS::EC2::Subnet'
     Properties:
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref myVPC
       AvailabilityZone: !Select [ '1', !GetAZs ]
       CidrBlock: !Ref PrivateSubnetCIDR2
       MapPublicIpOnLaunch: false
@@ -147,14 +146,14 @@ Resources:
   GatewayToInternet:
     Type: 'AWS::EC2::VPCGatewayAttachment'
     Properties:
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref myVPC
       InternetGatewayId: !Ref InternetGateway
 
   # Public Route Table 
   PublicRouteTable:         
     Type: 'AWS::EC2::RouteTable'
     Properties:
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref myVPC
       Tags:
         - Key: Network
           Value: PublicRT
@@ -185,7 +184,7 @@ Resources:
       SubnetId: !Ref PublicSubnet1
   NatPublicIP: 
     Type: "AWS::EC2::EIP"
-    DependsOn: PubPrivateVPC
+    DependsOn: myVPC
     Properties:
       Domain: vpc
 
@@ -193,7 +192,7 @@ Resources:
   PrivateRouteTable: 
     Type: 'AWS::EC2::RouteTable'
     Properties:
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref myVPC
       Tags:
         - Key: Network
           Value: PrivateRT
@@ -219,7 +218,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Allow SSH to  Web Server Security Group"
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref myVPC
       SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: 22
@@ -231,7 +230,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Allow HTTP and HTTPS to everywhere"
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref myVPC
       SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: 80
@@ -247,7 +246,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Allow http to ALB sec group, 3306 to RDS database sec group, ssh to bastion sec group"
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref myVPC
   MySecGroupIngressSSH:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: 
@@ -278,7 +277,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Allow port 3306 to Web Servers Security Group"
-      VpcId: !Ref PubPrivateVPC
+      VpcId: !Ref myVPC
   MySecurityGrpIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -310,7 +309,7 @@ Resources:
 Outputs:
   MyVPC:
     Description: " MyVPC with 2 Private and 2 public Subnets"
-    Value: !Ref PubPrivateVPC        
+    Value: !Ref myVPC        
   PrivateSubnet1:
     Description: " Private Subnet AZ1"
     Value: !Ref PrivateSubnet1
