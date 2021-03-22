@@ -229,7 +229,7 @@ Resources:
         Value: !Ref TargetGrpTagName
 
   # Application Load Balancer
-  myHTTPSlListener:
+  ListenerRule1:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       Certificates:
@@ -242,7 +242,7 @@ Resources:
       Port: 443
       Protocol: HTTPS
 
-  myHTTPListener: 
+  ListenerRule2: 
     Type: AWS::ElasticLoadBalancingV2::Listener
     DependsOn:
       - MyALB
