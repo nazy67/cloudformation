@@ -22,7 +22,7 @@ We need to bring Internet to VPC and Internet Gateway will solve that and when i
 The next resource is Route tables (public and private) 2 public subnets will be assosiated with  Public-RT attached with Internet Gateway and 2 private subnets will be assosiated with  Private-RT which is attached to Nat Gateway. When VPC gets created Main RT gets created with it, we can use that as a Public RT or create  new one. In this demo I did created brand new route tables. The diagram below will show detailed VPC structure, that I described above: 
 </p>
 
-<img src="images/vpc.png" alt="aws" width="800" height="500"> 
+<img src="images/aws_diagram.png" alt="aws" width="800" height="500"> 
 
 The next step is security groups:
 
