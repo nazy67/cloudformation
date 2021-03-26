@@ -3,7 +3,16 @@ Description: This template creates WordPress Instance, RDS database,ALB and Rout
 
 ### Define Parameters ###
 
-Parameters:  
+Parameters:
+
+  NetworkStackName:
+    Description: "Name of an active CloudFormation stack that contains the networking resources, such as the subnet and security group, that will be used in this stack."
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: (^[a-zA-Z][-a-zA-Z0-9]*$)
+    Default: "" #vpc 
+
   # RDS DataBase Parameters
   DbUserName:  
     NoEcho: 'true'
@@ -66,7 +75,7 @@ Parameters:
     Default: wp-instance
   DbSubGrpName:
     Type: String
-    Default: dbsubgrp
+    Default: dbsub-grp
   DbName: 
     Type: String
     Default: wordpressdb
@@ -94,7 +103,7 @@ Parameters:
   SshKeyName:
     Description: 'The name of your local machine ssh-key'
     Type: 'AWS::EC2::KeyPair::KeyName'
-    Default: ""
+    Default: "bastion-key"
   SSHLocation:
     Type: String
     MinLength: 9
@@ -120,6 +129,7 @@ Mappings:
 ### Define Resources ###
 
 Resources:
+  # Webserver
   WordPressInstance: 
     Description:  WordPress Instance 
     Type: AWS::EC2::Instance
@@ -133,9 +143,12 @@ Resources:
           - Arch
       KeyName: !Ref SSHKeyName   
       InstanceType: !Ref Ec2InstanceType
-      SubnetId: !Ref PrivateSubnet2
+      SubnetId:
+        Fn::ImportValue:
+          Fn::Sub: '${NetworkStackName}-PubicSubnet2ID'
       SecurityGroupIds: 
-        - !Ref WordPressSecGroup
+        - Fn::ImportValue:
+            Fn::Sub: '${NetworkStackName}-WebServerSecurityGroupID'
       UserData:
         Fn::Base64: 
           !Sub |
@@ -167,18 +180,20 @@ Resources:
   RdsDbSubGrp: 
     Type: AWS::RDS::DBSubnetGroup
     Properties: 
-      DBSubnetGroupDescription: Database Sub Group
+      DBSubnetGroupDescription: RDS Database Subnet Group
       DBSubnetGroupName: !Ref DbSubGrpName
       SubnetIds:
-        - !Ref PrivSubnet2
-        - !Ref PrivSubnet1
+        Fn::ImportValue:
+          - Fn::Sub: '${NetworkStackName}-PrivateSubnet1ID'
+          - Fn::Sub: '${NetworkStackName}-PrivateSubnet2ID'
 
-  # My RDS DB Instance
+  # RDS Database Instance
   MyRdsDb:  
     Type: AWS::RDS::DBInstance
     Properties:
       VPCSecurityGroups: 
-        - !Ref RdsSecGroup
+        - Fn::ImportValue:
+            Fn::Sub: '${NetworkStackName}-RDSSecurityGroupID'
       DBSubnetGroupName: !Ref RdsDbSubGrp
       AllocatedStorage: !Ref DbAllocatedStorage
       DBInstanceClass:  !Ref DataBaseInstanceClass
@@ -228,7 +243,7 @@ Resources:
       - Key: Name
         Value: !Ref TargetGrpTagName
 
-  # Application Load Balancer
+  # Listener Rules
   ListenerRule1:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -256,16 +271,19 @@ Resources:
           Ref: MyALB
       Port: 80
       Protocol: HTTP
-      
+
+  # Application Load Balancer    
   MyALB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Scheme: internet-facing # or internal
       Subnets:
-      - Ref: PublicSubnet1
-      - Ref: PublicSubnet2
+        Fn::ImportValue:
+          - Fn::Sub: '${NetworkStackName}-PubicSubnet1ID'
+          - Fn::Sub: '${NetworkStackName}-PubicSubnet2ID'
       SecurityGroups:
-      - Ref: ELBSecurityGroup      
+        - Fn::ImportValue:
+            Fn::Sub: '${NetworkStackName}-ELBSecurityGroupID'      
       Tags:
       - Key: Name
         Value: ! Ref AlbTagName
@@ -286,26 +304,26 @@ Resources:
  ### Outputs ###
 Outputs:
   WordpressWebInstance:
-    Description: WordPress Instance Id
+    Description: 'WordPress Instance ID'
     Value: !Ref WordpressWebInstance                
   RDSDataBaseName:
-    Description:  My RDS Database Name
+    Description:  'My RDS Database Name'
     Value: !Ref DataBaseName
   RDSDataIdentifier:
-    Description:  My RDS Database Identifier
+    Description:  'My RDS Database Identifier'
     Value: !Ref MyRDSDB
   RDSDBSubnetGroup: 
-    Description: RDS DB Subnet Group
+    Description: 'RDS DB Subnet Group'
     Value: !Ref RDSDBSubnetGroup
   RDSEndpoint:
-    Description: RDS databases Endpoint
+    Description: 'RDS databases Endpoint'
     Value: !GetAtt MyRDSDB.Endpoint.Address  
   WpWebAlbDnsName:
     Description: 'Webserver ELB DNS Name A Record'
     Value: !GetAtt MyALB.DNSName
   EC2TargetGroupName:
-    Description: 'My EC2 Target Group'
+    Description: 'My EC2 Target Group Name'
     Value: !Ref TargetGrpTagName
   MyLoadBalancerArn:
-    Description: 'Application Load Balancer'
+    Description: 'Application Load Balancer Name'
     Value: !Ref MyALB

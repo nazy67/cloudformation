@@ -1,0 +1,7 @@
+add the name for internet gateway and nat gateway
+image id mapping
+BlockDeviceMappings
+'' or "" marks on descriptions are not requared ,you can miss them
+Fn::ImportValue
+Fn::Sub
+tags

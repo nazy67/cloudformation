@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: This Template Creates a VPC with 2 Public and 2 Private Subnets. And security groups for our resouces.
+Description: This Template Creates a VPC with 2 Public and 2 Private Subnets, Security groups and Bastion Instance.
 
 ### DEFINE PARAMETERS ###
 
@@ -18,61 +18,61 @@ Parameters:
     Description: The AvailabilityZone to use for the second subnet
     Type: AWS::EC2::AvailabilityZone::Name
     
-  PublicSubnetCIDR1:
+  PubSubCIDR1:
     AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
     Default: 10.0.1.0/24
     Description: VPC CIDR Block for the Public Subnet (eg 10.0.0.0/24)
     Type: String
-  PublicSubnetCIDR2:
+  PubSubCIDR2:
     AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
     Default: 10.0.2.0/24
     Description: VPC CIDR Block for the Public Subnet (eg 10.0.0.0/24)
     Type: String  
 
-  PrivateSubnetCIDR1:
+  PrivSubCIDR1:
     AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
     Default: 10.0.11.0/24
     Description: VPC CIDR Block for the Public Subnet (eg 10.0.0.0/24)
     Type: String
-  PrivateSubnetCIDR2:
+  PrivSubCIDR2:
     AllowedPattern: '((\d{1,3})\.){3}\d{1,3}/\d{1,2}'
     Default: 10.0.12.0/24
     Description: VPC CIDR Block for the Public Subnet (eg 10.0.0.0/24)
-    Type: String   
+    Type: String
 
-#  # Parameters for Bastion Instance
-#  SSHKeyName:
-#    Description: 'Name of the EC2-key you need to use for Bastion Instance'
-#    Type: 'AWS::EC2::KeyPair::KeyName'
-#    Default: ""
-#  SSHLocation:
-#    Description: must be a valid IP CIDR range of the form x.x.x.x/x.
-#    Type: String
-#    MinLength: 9
-#    MaxLength: 18
-#    Default: 0.0.0.0/0
-#    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
-#  InstanceType: 
-#    Description: Choose a valid Instance Type
-#    Type: String
-#    Default: t2.micro
-#    AllowedValues: [t2.micro, t2.small, t2.medium]
+  # Bastion Instance Parameters
+  SSHKeyName:
+    Description: 'Name of the EC2-key you need to use for Bastion Instance'
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    Default: ""
+  SSHLocation:
+    Description: must be a valid IP CIDR range of the form x.x.x.x/x.
+    Type: String
+    MinLength: 9
+    MaxLength: 18
+    Default: 0.0.0.0/0
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+  InstanceType: 
+    Description: Choose a valid Instance Type
+    Type: String
+    Default: t2.micro
+    AllowedValues: [t2.micro, t2.small, t2.medium]    
 
-### Mapings ###
-#Mappings:
-#  AWSInstanceType2Arch:    
-#    t2.micro:
-#      Arch : HVM64  
-#    t2.small: 
-#      Arch : HVM64  
-#    t2.medium:  
-#      Arch : HVM64  
-  
-#  AWSRegionArch2AMI:
-#    us-east-1: 
-#      HVM64: ami-04d29b6f966df1537 
-#    us-east-2: 
-#      HVM64: ami-09558250a3419e7d0
+## Mappings ###
+Mappings:
+  AWSInstanceType2Arch:    
+    t2.micro:
+      Arch : HVM64  
+    t2.small: 
+      Arch : HVM64  
+    t2.medium:  
+      Arch : HVM64  
+ 
+  AWSRegionArch2AMI:
+    us-east-1: 
+      HVM64: ami-04d29b6f966df1537 
+    us-east-2: 
+      HVM64: ami-09558250a3419e7d0
 
 ###  RESOURCES ###
 
@@ -96,7 +96,7 @@ Resources:
     Properties:
       VpcId: !Ref myVPC
       AvailabilityZone: !Select [ '0', !GetAZs ]
-      CidrBlock: !Ref PublicSubnetCIDR1
+      CidrBlock: !Ref PubSubCIDR1
       MapPublicIpOnLaunch: 'true'
       Tags:
       - Key: Name
@@ -106,7 +106,7 @@ Resources:
     Properties:
       VpcId: !Ref myVPC
       AvailabilityZone: !Select [ '1', !GetAZs ]    
-      CidrBlock: !Ref PublicSubnetCIDR2
+      CidrBlock: !Ref PubSubCIDR2
       MapPublicIpOnLaunch: 'true'
       Tags:
       - Key: Name
@@ -118,7 +118,7 @@ Resources:
     Properties:
       VpcId: !Ref myVPC
       AvailabilityZone: !Select [ '0', !GetAZs ]
-      CidrBlock: !Ref PrivateSubnetCIDR1
+      CidrBlock: !Ref PrivSubCIDR1
       MapPublicIpOnLaunch: false
       Tags:
       - Key: Name
@@ -128,7 +128,7 @@ Resources:
     Properties:
       VpcId: !Ref myVPC
       AvailabilityZone: !Select [ '1', !GetAZs ]
-      CidrBlock: !Ref PrivateSubnetCIDR2
+      CidrBlock: !Ref PrivSubCIDR2
       MapPublicIpOnLaunch: false
       Tags:
       - Key: Name
@@ -139,8 +139,8 @@ Resources:
     Type: 'AWS::EC2::InternetGateway'
     Properties:
       Tags:
-        - Key: Name
-          Value: !Join [_, [!Ref 'AWS::StackName']]
+        - Key: StackName
+          Value: !Join [_, [!Ref 'AWS::StackName']] ### internet-gw
         - Key: Network
           Value: PublicInternet
   GatewayToInternet:
@@ -155,8 +155,12 @@ Resources:
     Properties:
       VpcId: !Ref myVPC
       Tags:
-        - Key: Network
+        - Key: Name
           Value: PublicRT
+        - Key: Environmet
+          Value: Dev                 
+        - Key: StackName
+          Value: "${AWS::StackName}"
   PublicRoute:
     Type: 'AWS::EC2::Route'
     DependsOn: GatewayToInternet
@@ -196,6 +200,8 @@ Resources:
       Tags:
         - Key: Network
           Value: PrivateRT
+        - Key: StackName
+          Value: "${AWS::StackName}"           
   PrivateRoute:
     Type: 'AWS::EC2::Route'
     Properties:
@@ -288,27 +294,27 @@ Resources:
       SourceSecurityGroupId: !Ref WebServerSecurityGroup
       Tags:
       - Key: Name
-        Value: RDSDBInstance 
+        Value: RDSDBInstance
 
-#  # Bastion Host
-#  EC2BastionInstance:   
-#    Type: AWS::EC2::Instance
-#    Properties:
-#      ImageId: !FindInMap [ AWSRegionArch2AMI, !Ref 'AWS::Region' , !FindInMap [ AWSInstanceType2Arch, !Ref InstanceType, Arch ] ]  
-#      KeyName: !Ref SSHKeyName
-#      InstanceType: !Ref InstanceType
-#      SubnetId: !Ref PublicSubnet1
-#      SecurityGroupIds: 
-#      - !Ref BastionSecurityGroup
-#      Tags:
-#      - Key: Name
-#        Value: BastionHost
+  # Bastion Instance
+  EC2BastionInstance:   
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !FindInMap [ AWSRegionArch2AMI, !Ref 'AWS::Region' , !FindInMap [ AWSInstanceType2Arch, !Ref InstanceType, Arch ] ]  
+      KeyName: !Ref SSHKeyName
+      InstanceType: !Ref InstanceType
+      SubnetId: !Ref PublicSubnet1
+      SecurityGroupIds: 
+      - !Ref BastionSecurityGroup
+      Tags:
+      - Key: Name
+        Value: BastionHost
 
-### Outputs ###
+### OUTPUTS ###
 
 Outputs:
   MyVPC:
-    Description: " MyVPC ID"
+    Description: "MyVPC ID"
     Value: !Ref myVPC
     Export:
       Name: !Sub "${AWS::StackName}-MyVPCID"
@@ -318,7 +324,7 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}-PrivateSubnet1ID"
   PrivateSubnet2:
-    Description: " Private Subnet AZ2"
+    Description: "Private Subnet AZ2"
     Value: !Ref PrivateSubnet2
     Export:
       Name: !Sub "${AWS::StackName}-PrivateSubnet2ID"    
@@ -352,6 +358,6 @@ Outputs:
     Value: !Ref RDSSecurityGroup
     Export: 
       Name: !Sub "${AWS::StackName}-RDSSecurityGroupID"
-#  EC2BastionInstance:
-#      Description: "EC2 Bastion Instance"
-#      Value: !Ref EC2BastionInstance
+  EC2BastionInstance:
+      Description: "Bastion Instance ID"
+      Value: !Ref EC2BastionInstance      
