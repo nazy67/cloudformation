@@ -1,4 +1,4 @@
-In progress ...
+In progress ... Testing
 
 ## WordPress on Cloudformation with Bastion host
 
