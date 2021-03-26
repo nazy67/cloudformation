@@ -128,3 +128,5 @@ These plugins helps you to make your application secure , without redirectiong  
 [Cross-stack output](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html)
 
 [Fn::ImportValue](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-importvalue.html)
+
+[CloudFormation Compatible Functions](https://docs.openstack.org/heat/queens/template_guide/functions.html)
