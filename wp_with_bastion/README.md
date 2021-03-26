@@ -124,3 +124,5 @@ These plugins helps you to make your application secure , without redirectiong  
 [AWS Cloudformation documetnation](https://docs.aws.amazon.com/cloudformation/)
 
 [Lucid chart for diagrams](https://lucid.app/users/login#/login)
+
+[Cross-stack output](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html)
