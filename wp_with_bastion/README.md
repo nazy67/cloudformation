@@ -22,16 +22,14 @@ We need to bring Internet to VPC and Internet Gateway will solve that and when i
 The next resource is Route tables (public and private) 2 public subnets will be assosiated with  Public-RT attached with Internet Gateway and 2 private subnets will be assosiated with  Private-RT which is attached to Nat Gateway. When VPC gets created Main RT gets created with it, we can use that as a Public RT or create  new one. In this demo I did created brand new route tables. The diagram below will show detailed VPC structure, that I described above: 
 </p>
 
-<img src="images/vpc.png" alt="aws" width="800" height="500"> 
+<img src="images/aws_diagram.png" alt="aws" width="800" height="500"> 
 
 The next step is security groups:
 
   - Bastion Security group with SSH port open to 0.0.0.0/0 (or to my IP address).
   - Load balancer security group  with HTTPS 443 and HTTP 80 ports open to 0.0.0.0/0.
   - RDS security group with MySQL port 3306 open to WordPress host's Security Group. 
-  - WordPress host's Security group with port MySQL 3306 open to RDS's Security Group, HTTP port 80 open to ELB Security Group, and SSH port 22 will be open to Bastion Host Securty group. The next diagram will show it more clearer:
-
-<img src="images/security_group.png" alt="aws" width="800" height="500">
+  - WordPress host's Security group with port MySQL 3306 open to RDS's Security Group, HTTP port 80 open to ELB Security Group, and SSH port 22 will be open to Bastion Host Securty group.
 
 ## WordPress host
 <p>
@@ -109,8 +107,6 @@ Another important thing to remember to keep in mind that, always put . after you
 - Route 53
 
 ## Diagram
-
-<img src="images/aws_image.png" alt="aws" width="800" height="500">
 
 ## Notes 
 <p>
