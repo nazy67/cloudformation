@@ -13,7 +13,8 @@ Cloudformation example templates
 - Targer group with ALB
 - S3 bucket
 - Route 53
-- 
+- RDS database
+
 ## Usage
 
 ## Resources
