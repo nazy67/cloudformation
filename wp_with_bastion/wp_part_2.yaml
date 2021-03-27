@@ -2,16 +2,15 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: This template creates WordPress Instance, RDS database,ALB and Route 53.
 
 ### Define Parameters ###
-
 Parameters:
-
+  # First stack name
   NetworkStackName:
     Description: "Name of an active CloudFormation stack that contains the networking resources, such as the subnet and security group, that will be used in this stack."
     Type: String
     MinLength: 1
     MaxLength: 255
-    AllowedPattern: (^[a-zA-Z][-a-zA-Z0-9]*$)
-    Default: "" #vpc 
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    Default: "vpc"  
 
   # RDS DataBase Parameters
   DbUserName:  
@@ -72,16 +71,16 @@ Parameters:
   ###  Tags   ###
   WordPressName: 
     Type: String
-    Default: wp-instance
+    Default: Wordpress-instance
   DbSubGrpName:
     Type: String
-    Default: dbsub-grp
+    Default: Dbsub-grp
   DbName: 
     Type: String
     Default: wordpressdb
   RdsDbTagName: 
     Type: String
-    Default: my-rds
+    Default: My-rds
   TargetGrpTagName:
     Type: String
     Default: target-grp
@@ -90,7 +89,7 @@ Parameters:
     Default: app-lb
   
   # Wordpress Web Instance parameters
-  Ec2InstanceType:  
+  WebInstanceType:  
     Type: String   
     Default: t2.micro
     AllowedValues: [t2.micro, t2.small, t2.medium]
@@ -100,7 +99,7 @@ Parameters:
     Default: 20
     Description: Please choose a valid Number
     AllowedValues: [20, 30, 40, 50]
-  SshKeyName:
+  SSHKeyName:
     Description: 'The name of your local machine ssh-key'
     Type: 'AWS::EC2::KeyPair::KeyName'
     Default: "bastion-key"
@@ -113,39 +112,25 @@ Parameters:
     Description: must be a valid IP CIDR range of the form x.x.x.x/x.
 
 Mappings: 
-  AWSInstanceType2Arch:    
-    t2.micro:
-      Arch : HVM64  
-    t2.small: 
-      Arch : HVM64  
-    t2.medium:  
-      Arch : HVM64  
-  AWSRegionArch2AMI:
-    us-east-1: 
-      HVM64: ami-04d29b6f966df1537 
-    us-east-2: 
+  RegionMap:
+    us-east-1:
+      HVM64: ami-04d29b6f966df1537
+    us-east-2:
       HVM64: ami-09558250a3419e7d0
 
 ### Define Resources ###
-
 Resources:
   # Webserver
   WordPressInstance: 
     Description:  WordPress Instance 
     Type: AWS::EC2::Instance
     Properties:
-      ImageId:  
-        Fn::FindInMap:
-        - AWSRegionArch2AMI
-        - Ref: AWS::Region
-        - Fn::FindInMap:
-          - AWSInstanceType2Arch
-          - Arch
-      KeyName: !Ref SSHKeyName   
-      InstanceType: !Ref Ec2InstanceType
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", HVM64]
+      InstanceType: !Ref WebInstanceType
+      KeyName: !Ref SSHKeyName  
       SubnetId:
         Fn::ImportValue:
-          Fn::Sub: '${NetworkStackName}-PubicSubnet2ID'
+          Fn::Sub: '${NetworkStackName}-PrivateSubnet2ID'
       SecurityGroupIds: 
         - Fn::ImportValue:
             Fn::Sub: '${NetworkStackName}-WebServerSecurityGroupID'
@@ -183,9 +168,8 @@ Resources:
       DBSubnetGroupDescription: RDS Database Subnet Group
       DBSubnetGroupName: !Ref DbSubGrpName
       SubnetIds:
-        Fn::ImportValue:
-          - Fn::Sub: '${NetworkStackName}-PrivateSubnet1ID'
-          - Fn::Sub: '${NetworkStackName}-PrivateSubnet2ID'
+      - {'Fn::ImportValue': !Sub '${NetworkStackName}-PrivateSubnet1ID'}
+      - {'Fn::ImportValue': !Sub '${NetworkStackName}-PrivateSubnet2ID'}
 
   # RDS Database Instance
   MyRdsDb:  
@@ -196,11 +180,11 @@ Resources:
             Fn::Sub: '${NetworkStackName}-RDSSecurityGroupID'
       DBSubnetGroupName: !Ref RdsDbSubGrp
       AllocatedStorage: !Ref DbAllocatedStorage
-      DBInstanceClass:  !Ref DataBaseInstanceClass
+      DBInstanceClass:  !Ref DbInstanceClass
       Engine: MariaDB
       EngineVersion: 10.4.8
       #StorageEncrypted: true
-      DBInstanceIdentifier:  !Ref DataBaseInstanceId
+      DBInstanceIdentifier:  !Ref DbInstanceId
       MasterUsername: !Ref DbUserName
       MasterUserPassword: !Ref DbUserPassword
       DBName: !Ref DbName
@@ -231,14 +215,16 @@ Resources:
       TargetType: instance
       Targets:
       - Id:
-          Ref: WordpressWebInstance
+          Ref: WordPressInstance
       Matcher:
         HttpCode: '200'
       Name: !Ref TargetGrpTagName
       TargetGroupAttributes:
       - Key: deregistration_delay.timeout_seconds
         Value: '20'
-      VpcId: !Ref MyVPC
+      VpcId:
+        Fn::ImportValue:
+          Fn::Sub: '${NetworkStackName}-MyVPCID'
       Tags:
       - Key: Name
         Value: !Ref TargetGrpTagName
@@ -265,10 +251,8 @@ Resources:
     Properties:
       DefaultActions:
         - Type: forward
-          TargetGroupARN:
-            Ref: EC2TargetGroup
-      LoadBalancerARN:
-          Ref: MyALB
+          TargetGroupArn: !Ref EC2TargetGroup
+      LoadBalancerArn: !Ref MyALB
       Port: 80
       Protocol: HTTP
 
@@ -278,9 +262,8 @@ Resources:
     Properties:
       Scheme: internet-facing # or internal
       Subnets:
-        Fn::ImportValue:
-          - Fn::Sub: '${NetworkStackName}-PubicSubnet1ID'
-          - Fn::Sub: '${NetworkStackName}-PubicSubnet2ID'
+      - {'Fn::ImportValue': !Sub '${NetworkStackName}-PubicSubnet1ID'}
+      - {'Fn::ImportValue': !Sub '${NetworkStackName}-PubicSubnet2ID'}            
       SecurityGroups:
         - Fn::ImportValue:
             Fn::Sub: '${NetworkStackName}-ELBSecurityGroupID'      
@@ -298,26 +281,26 @@ Resources:
       - Name: !Sub "${WpWebDomain}."
         Type: 'A'
         AliasTarget:
-          HostedZoneId: !Ref "WPWebALBHostedZoneId"
+          HostedZoneId: !Ref "WebAlbHostedZoneId"
           DNSName: !GetAtt MyALB.DNSName 
 
  ### Outputs ###
 Outputs:
   WordpressWebInstance:
     Description: 'WordPress Instance ID'
-    Value: !Ref WordpressWebInstance                
+    Value: !Ref WordPressInstance                
   RDSDataBaseName:
     Description:  'My RDS Database Name'
-    Value: !Ref DataBaseName
+    Value: !Ref DbName
   RDSDataIdentifier:
     Description:  'My RDS Database Identifier'
-    Value: !Ref MyRDSDB
+    Value: !Ref MyRdsDb
   RDSDBSubnetGroup: 
     Description: 'RDS DB Subnet Group'
-    Value: !Ref RDSDBSubnetGroup
+    Value: !Ref RdsDbSubGrp
   RDSEndpoint:
     Description: 'RDS databases Endpoint'
-    Value: !GetAtt MyRDSDB.Endpoint.Address  
+    Value: !GetAtt MyRdsDb.Endpoint.Address  
   WpWebAlbDnsName:
     Description: 'Webserver ELB DNS Name A Record'
     Value: !GetAtt MyALB.DNSName

@@ -59,19 +59,11 @@ Parameters:
     AllowedValues: [t2.micro, t2.small, t2.medium]    
 
 ## Mappings ###
-Mappings:
-  AWSInstanceType2Arch:    
-    t2.micro:
-      Arch : HVM64  
-    t2.small: 
-      Arch : HVM64  
-    t2.medium:  
-      Arch : HVM64  
- 
-  AWSRegionArch2AMI:
-    us-east-1: 
-      HVM64: ami-04d29b6f966df1537 
-    us-east-2: 
+Mappings: 
+  RegionMap:
+    us-east-1:
+      HVM64: ami-04d29b6f966df1537
+    us-east-2:
       HVM64: ami-09558250a3419e7d0
 
 ###  RESOURCES ###
@@ -139,8 +131,8 @@ Resources:
     Type: 'AWS::EC2::InternetGateway'
     Properties:
       Tags:
-        - Key: StackName
-          Value: !Join [_, [!Ref 'AWS::StackName']] ### internet-gw
+        - Key: Name
+          Value: Internet-Gw
         - Key: Network
           Value: PublicInternet
   GatewayToInternet:
@@ -156,11 +148,7 @@ Resources:
       VpcId: !Ref myVPC
       Tags:
         - Key: Name
-          Value: PublicRT
-        - Key: Environmet
-          Value: Dev                 
-        - Key: StackName
-          Value: "${AWS::StackName}"
+          Value: PublicRT                
   PublicRoute:
     Type: 'AWS::EC2::Route'
     DependsOn: GatewayToInternet
@@ -183,7 +171,12 @@ Resources:
   NatGateway: 
     Type: "AWS::EC2::NatGateway"
     DependsOn: NatPublicIP
-    Properties: 
+    Properties:
+      Tags:
+        - Key: Name
+          Value: Nat-Gw
+        - Key: Network
+          Value: PrivateInternet     
       AllocationId: !GetAtt NatPublicIP.AllocationId
       SubnetId: !Ref PublicSubnet1
   NatPublicIP: 
@@ -198,10 +191,8 @@ Resources:
     Properties:
       VpcId: !Ref myVPC
       Tags:
-        - Key: Network
-          Value: PrivateRT
-        - Key: StackName
-          Value: "${AWS::StackName}"           
+        - Key: Name
+          Value: PrivateRT           
   PrivateRoute:
     Type: 'AWS::EC2::Route'
     Properties:
@@ -230,6 +221,9 @@ Resources:
         FromPort: 22
         ToPort: 22
         CidrIp: !Ref SSHLocation
+      Tags:
+      - Key: Name
+        Value: Bastion-sg        
 
   # ELB Security Group for ALB 
   ELBSecurityGroup: 
@@ -246,6 +240,9 @@ Resources:
         FromPort: 443
         ToPort: 443
         CidrIp: 0.0.0.0/0
+      Tags:
+      - Key: Name
+        Value: Alb-sg
 
   # Web Server Security Group for WordPress Instance
   WebServerSecurityGroup: 
@@ -253,6 +250,9 @@ Resources:
     Properties:
       GroupDescription: "Allow http to ALB sec group, 3306 to RDS database sec group, ssh to bastion sec group"
       VpcId: !Ref myVPC
+      Tags:
+      - Key: Name
+        Value: Wordpress-sg
   MySecGroupIngressSSH:
     Type: AWS::EC2::SecurityGroupIngress
     Properties: 
@@ -284,6 +284,9 @@ Resources:
     Properties:
       GroupDescription: "Allow port 3306 to Web Servers Security Group"
       VpcId: !Ref myVPC
+      Tags:
+      - Key: Name
+        Value: Rds-sg      
   MySecurityGrpIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -292,23 +295,20 @@ Resources:
       FromPort: 3306
       ToPort: 3306
       SourceSecurityGroupId: !Ref WebServerSecurityGroup
-      Tags:
-      - Key: Name
-        Value: RDSDBInstance
 
   # Bastion Instance
   EC2BastionInstance:   
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: !FindInMap [ AWSRegionArch2AMI, !Ref 'AWS::Region' , !FindInMap [ AWSInstanceType2Arch, !Ref InstanceType, Arch ] ]  
-      KeyName: !Ref SSHKeyName
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", HVM64]  
       InstanceType: !Ref InstanceType
-      SubnetId: !Ref PublicSubnet1
+      KeyName: !Ref SSHKeyName
+      SubnetId: !Ref PublicSubnet2
       SecurityGroupIds: 
       - !Ref BastionSecurityGroup
       Tags:
       - Key: Name
-        Value: BastionHost
+        Value: Bastion-Instance
 
 ### OUTPUTS ###
 
