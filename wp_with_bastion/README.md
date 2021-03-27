@@ -1,5 +1,3 @@
-In progress ... Testing... diagram needs to be adjusted
-
 ## WordPress on Cloudformation with Bastion host
 
 ## Prerequisites:
