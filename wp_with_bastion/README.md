@@ -149,6 +149,8 @@ These plugins helps you to make your application secure , without redirectiong  
 
 [Fn::ImportValue](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-importvalue.html)
 
+[Fn::Sub](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-sub.html)
+
 [CloudFormation Compatible Functions](https://docs.openstack.org/heat/queens/template_guide/functions.html)
 
 [widdix/aws-cf-templates](https://github.com/widdix/aws-cf-templates/blob/master/wordpress/wordpress-ha-aurora.yaml)
