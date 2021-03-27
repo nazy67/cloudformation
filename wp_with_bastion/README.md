@@ -141,7 +141,7 @@ These plugins helps you to make your application secure , without redirectiong  
 
 [AWS Documentation - Hosted Zone IDs](https://docs.aws.amazon.com/general/latest/gr/elb.html)
 
-[Lucid chart for diagrams](https://lucid.app/users/login#/login)
+[Lucid chart for diagrams](https://lucid.app)
 
 [Cross-stack output](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html)
 
