@@ -4,6 +4,7 @@ Cloudformation example templates
  ## Prerequisites:
    - AWS account
    - AWS Cloudformation Documentation
+   - 
 ## Description
  This example templates you can use as a base for bigger and complex templates. It contains:
 
@@ -17,4 +18,8 @@ Cloudformation example templates
 
 ## Usage
 
-## Resources
+Reusable templates for the examples above.
+
+## Links
+
+[AWS CloudFormation. User Guide](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-ug.pdf#Welcome)
